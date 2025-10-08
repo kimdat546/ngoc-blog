@@ -1,19 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { getBlogPosts, BlogPost } from '@/lib/blogData';
+import { BlogPost, getBlogPosts } from "@/lib/blogData";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { BsCalendar2Heart } from "react-icons/bs";
+import { TbClockHeart } from "react-icons/tb";
 
 export default function BlogPosts() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     const allPosts = getBlogPosts();
     setPosts(allPosts.slice(0, 3)); // Show only first 3 posts on homepage
   }, []);
 
-  const categories = ['All', 'Story', 'Article', 'Adventure'];
+  const categories = ["All", "Story", "Article", "Adventure"];
 
   return (
     <section id="blog" className="py-20 bg-cream">
@@ -34,8 +36,8 @@ export default function BlogPosts() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
                   selectedCategory === category
-                    ? 'bg-moss text-white shadow-lg'
-                    : 'bg-white text-sage hover:bg-sage hover:text-white'
+                    ? "bg-moss text-white shadow-lg"
+                    : "bg-white text-sage hover:bg-sage"
                 }`}
               >
                 {category}
@@ -48,7 +50,7 @@ export default function BlogPosts() {
           {posts.map((post, index) => (
             <article
               key={post.id}
-              className="floating-card overflow-hidden animate-float"
+              className="floating-card overflow-hidden"
               style={{ animationDelay: `${index * 200}ms` }}
             >
               <div className="aspect-video bg-sage/20 relative overflow-hidden">
@@ -66,10 +68,14 @@ export default function BlogPosts() {
 
               <div className="p-6">
                 <div className="flex items-center text-sm text-sage mb-3">
-                  <div className="text-sm mr-2">📅</div>
+                  <div className="text-sm mr-2">
+                    <BsCalendar2Heart />
+                  </div>
                   <span>{new Date(post.date).toLocaleDateString()}</span>
                   <span className="mx-2">•</span>
-                  <div className="text-sm mr-2">⏰</div>
+                  <div className="text-sm mr-2">
+                    <TbClockHeart />
+                  </div>
                   <span>{post.readTime}</span>
                 </div>
 

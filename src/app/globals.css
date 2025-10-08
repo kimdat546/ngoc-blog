@@ -63,6 +63,7 @@
   .bg-cream { background: var(--cream); }
   .bg-forest { background: var(--forest-green); }
   .bg-moss { background: var(--moss-green); }
+  .border-moss { border-color: var(--moss-green); }
   .bg-warm-white { background: var(--warm-white); }
   .animate-float {
     animation: float 6s ease-in-out infinite;

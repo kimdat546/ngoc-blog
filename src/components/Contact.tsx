@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, FormEvent, ChangeEvent } from 'react';
+import { BsRocketTakeoff } from 'react-icons/bs';
+import { GiClockwork } from 'react-icons/gi';
+import { HiOutlineLocationMarker } from 'react-icons/hi';
+import { PiVoicemailFill } from 'react-icons/pi';
 
 interface FormData {
   name: string;
@@ -41,7 +45,10 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-20 bg-forest text-white relative overflow-hidden">
+    <section
+      id="contact"
+      className="py-20 bg-forest text-white relative overflow-hidden"
+    >
       {/* Floating spirits background */}
       <div className="absolute inset-0">
         {Array.from({ length: 15 }).map((_, i) => (
@@ -52,7 +59,7 @@ export default function Contact() {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animationDelay: `${Math.random() * 6}s`,
-              animationDuration: `${4 + Math.random() * 4}s`
+              animationDuration: `${4 + Math.random() * 4}s`,
             }}
           />
         ))}
@@ -63,8 +70,9 @@ export default function Contact() {
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold mb-6">Let's Connect</h2>
             <p className="text-xl opacity-90 max-w-3xl mx-auto">
-              Have thoughts about my stories or want to share your own nature experiences?
-              I'd love to hear from fellow nature enthusiasts and storytellers.
+              Have thoughts about my stories or want to share your own nature
+              experiences? I'd love to hear from fellow nature enthusiasts and
+              storytellers.
             </p>
           </div>
 
@@ -73,31 +81,51 @@ export default function Contact() {
             <div className="space-y-8">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-sage rounded-full flex items-center justify-center">
-                  <div className="text-xl text-white">📧</div>
+                  <div className="text-xl text-white">
+                    <PiVoicemailFill />
+                  </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Send a Message</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-white">
+                    Send a Message
+                  </h3>
                   <p className="opacity-80">hello@myforestblog.com</p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-sage rounded-full flex items-center justify-center">
-                  <div className="text-xl text-white">📍</div>
+                  <div className="text-xl text-white">
+                    <HiOutlineLocationMarker />
+                  </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Visit the Grove</h3>
-                  <p className="opacity-80">Deep in the Enchanted Forest<br />Where the ancient trees whisper</p>
+                  <h3 className="text-xl font-semibold mb-2 text-white">
+                    Visit the Grove
+                  </h3>
+                  <p className="opacity-80">
+                    Deep in the Enchanted Forest
+                    <br />
+                    Where the ancient trees whisper
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-sage rounded-full flex items-center justify-center">
-                  <div className="text-xl text-white">⏰</div>
+                  <div className="text-xl text-white">
+                    <GiClockwork />
+                  </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Forest Hours</h3>
-                  <p className="opacity-80">Dawn to Dusk<br />When the spirits are most active</p>
+                  <h3 className="text-xl font-semibold mb-2 text-white">
+                    Forest Hours
+                  </h3>
+                  <p className="opacity-80">
+                    Dawn to Dusk
+                    <br />
+                    When the spirits are most active
+                  </p>
                 </div>
               </div>
             </div>
@@ -106,7 +134,9 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 opacity-90">Your Name</label>
+                  <label className="block text-sm font-medium mb-2 opacity-90">
+                    Your Name
+                  </label>
                   <input
                     type="text"
                     name="name"
@@ -118,7 +148,9 @@ export default function Contact() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 opacity-90">Email Address</label>
+                  <label className="block text-sm font-medium mb-2 opacity-90">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     name="email"
@@ -132,7 +164,9 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 opacity-90">Subject</label>
+                <label className="block text-sm font-medium mb-2 opacity-90">
+                  Subject
+                </label>
                 <input
                   type="text"
                   name="subject"
@@ -145,7 +179,9 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 opacity-90">Message</label>
+                <label className="block text-sm font-medium mb-2 opacity-90">
+                  Message
+                </label>
                 <textarea
                   name="message"
                   value={formData.message}
@@ -160,7 +196,7 @@ export default function Contact() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-sage hover:bg-moss text-white font-medium py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-white/10 hover:bg-moss text-white font-medium py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -170,7 +206,9 @@ export default function Contact() {
                 ) : (
                   <div className="flex items-center justify-center space-x-2">
                     <span>Send Message</span>
-                    <div className="text-lg">📤</div>
+                    <div className="text-lg">
+                      <BsRocketTakeoff />
+                    </div>
                   </div>
                 )}
               </button>

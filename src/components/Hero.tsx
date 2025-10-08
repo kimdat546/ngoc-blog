@@ -94,7 +94,7 @@ export default function Hero() {
           </button>
           <button
             onClick={() => scrollToSection("about")}
-            className="px-8 py-4 text-lg text-moss border-2 border-moss rounded-full hover:bg-moss hover:text-white transition-all duration-300"
+            className="px-8 py-4 text-lg bg-moss border-2 border-moss text-white hover:border-white rounded-full transition-all duration-300"
           >
             About Me
           </button>

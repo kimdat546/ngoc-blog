@@ -43,6 +43,11 @@ export default function About() {
                 </blockquote>
                 <div className="w-12 h-1 bg-moss mx-auto"></div>
               </div>
+              <img
+                src="/images/chibi.png"
+                alt="Forest Spirit"
+                className="absolute -bottom-16 -right-12 w-32 h-32 "
+              />
             </div>
           </div>
         </div>

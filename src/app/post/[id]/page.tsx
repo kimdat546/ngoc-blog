@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getBlogPosts, getPostById, BlogPost } from '@/lib/blogData';
+import { BsCalendar2Heart } from 'react-icons/bs';
+import { TbClockHeart } from 'react-icons/tb';
 
 export default function PostPage() {
   const params = useParams();
@@ -50,7 +52,10 @@ export default function PostPage() {
 
       <article className="container mx-auto px-6 py-12 max-w-4xl pt-24">
         <div className="mb-8">
-          <Link href="/posts" className="inline-flex items-center text-moss hover:text-forest mb-6">
+          <Link
+            href="/posts"
+            className="inline-flex items-center text-moss hover:text-forest mb-6"
+          >
             <div className="text-sm mr-2">←</div>
             Back to Posts
           </Link>
@@ -66,10 +71,14 @@ export default function PostPage() {
           </h1>
 
           <div className="flex items-center text-sage mb-8">
-            <div className="text-sm mr-2">📅</div>
+            <div className="text-sm mr-2">
+              <BsCalendar2Heart />
+            </div>
             <span>{new Date(post.date).toLocaleDateString()}</span>
             <span className="mx-3">•</span>
-            <div className="text-sm mr-2">⏰</div>
+            <div className="text-sm mr-2">
+              <TbClockHeart />
+            </div>
             <span>{post.readTime}</span>
           </div>
         </div>
@@ -88,15 +97,19 @@ export default function PostPage() {
           </p>
 
           <div className="text-lg leading-relaxed text-forest">
-            {post.content.split('\n\n').map((paragraph, index) => (
-              <p key={index} className="mb-6">{paragraph}</p>
+            {post.content.split("\n\n").map((paragraph, index) => (
+              <p key={index} className="mb-6">
+                {paragraph}
+              </p>
             ))}
           </div>
         </div>
 
         {relatedPosts.length > 0 && (
           <div className="mt-16 pt-8 border-t border-sage/20">
-            <h3 className="text-2xl font-bold text-forest mb-8">Related Posts</h3>
+            <h3 className="text-2xl font-bold text-forest mb-8">
+              Related Posts
+            </h3>
             <div className="grid md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
                 <Link
@@ -112,8 +125,12 @@ export default function PostPage() {
                     />
                   </div>
                   <div className="p-4">
-                    <h4 className="font-bold text-forest mb-2">{relatedPost.title}</h4>
-                    <p className="text-sm text-sage">{relatedPost.excerpt.substring(0, 100)}...</p>
+                    <h4 className="font-bold text-forest mb-2">
+                      {relatedPost.title}
+                    </h4>
+                    <p className="text-sm text-sage">
+                      {relatedPost.excerpt.substring(0, 100)}...
+                    </p>
                   </div>
                 </Link>
               ))}
