@@ -16,14 +16,15 @@
 
 @layer base {
   body {
-    font-family: 'Georgia', serif;
+    font-family: 'Source Serif 4', Georgia, serif;
     color: var(--forest-green);
     background: var(--warm-white);
   }
 
   h1, h2, h3 {
-    font-family: 'Georgia', serif;
+    font-family: 'Source Serif 4', Georgia, serif;
     color: var(--forest-green);
+    font-weight: 700;
   }
 }
 

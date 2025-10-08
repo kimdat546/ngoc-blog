@@ -8,28 +8,59 @@ import Footer from '@/components/Footer';
 import { getBlogPosts, getPostById, BlogPost } from '@/lib/blogData';
 import { BsCalendar2Heart } from 'react-icons/bs';
 import { TbClockHeart } from 'react-icons/tb';
+import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
+import { BLOCKS } from '@contentful/rich-text-types';
 
 export default function PostPage() {
   const params = useParams();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const postId = params.id as string;
+    const fetchPost = async () => {
+      setLoading(true);
+      const postId = params.id as string;
 
-    if (postId) {
-      const foundPost = getPostById(parseInt(postId));
-      setPost(foundPost || null);
+      if (postId) {
+        const foundPost = await getPostById(postId);
+        setPost(foundPost);
 
-      if (foundPost) {
-        const allPosts = getBlogPosts();
-        const related = allPosts
-          .filter(p => p.id !== foundPost.id && p.category === foundPost.category)
-          .slice(0, 3);
-        setRelatedPosts(related);
+        if (foundPost) {
+          const allPosts = await getBlogPosts();
+          const related = allPosts
+            .filter(p => p.id !== foundPost.id && p.category === foundPost.category)
+            .slice(0, 3);
+          setRelatedPosts(related);
+        }
       }
-    }
+      setLoading(false);
+    };
+    fetchPost();
   }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-warm-white">
+        <Header />
+        <article className="container mx-auto px-6 py-12 max-w-4xl pt-24 animate-pulse">
+          <div className="mb-8">
+            <div className="h-8 bg-sage/20 rounded w-32 mb-6"></div>
+            <div className="h-4 bg-sage/20 rounded w-24 mb-6"></div>
+            <div className="h-12 bg-sage/20 rounded w-3/4 mb-6"></div>
+            <div className="h-4 bg-sage/20 rounded w-48 mb-8"></div>
+          </div>
+          <div className="aspect-video bg-sage/20 rounded-2xl mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-4 bg-sage/20 rounded"></div>
+            <div className="h-4 bg-sage/20 rounded"></div>
+            <div className="h-4 bg-sage/20 rounded w-5/6"></div>
+          </div>
+        </article>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -92,16 +123,42 @@ export default function PostPage() {
         </div>
 
         <div className="prose prose-lg max-w-none">
-          <p className="text-xl text-sage leading-relaxed mb-8">
-            {post.excerpt}
-          </p>
+          <div className="text-xl text-sage leading-relaxed mb-8">
+            {documentToReactComponents(post.excerptRichText, {
+              renderNode: {
+                [BLOCKS.PARAGRAPH]: (node, children) => (
+                  <p className="mb-4">{children}</p>
+                ),
+              },
+            })}
+          </div>
 
           <div className="text-lg leading-relaxed text-forest">
-            {post.content.split("\n\n").map((paragraph, index) => (
-              <p key={index} className="mb-6">
-                {paragraph}
-              </p>
-            ))}
+            {documentToReactComponents(post.contentRichText, {
+              renderNode: {
+                [BLOCKS.PARAGRAPH]: (node, children) => (
+                  <p className="mb-6">{children}</p>
+                ),
+                [BLOCKS.HEADING_1]: (node, children) => (
+                  <h1 className="text-3xl font-bold mb-4 mt-8">{children}</h1>
+                ),
+                [BLOCKS.HEADING_2]: (node, children) => (
+                  <h2 className="text-2xl font-bold mb-4 mt-6">{children}</h2>
+                ),
+                [BLOCKS.HEADING_3]: (node, children) => (
+                  <h3 className="text-xl font-bold mb-3 mt-4">{children}</h3>
+                ),
+                [BLOCKS.UL_LIST]: (node, children) => (
+                  <ul className="list-disc ml-6 mb-6">{children}</ul>
+                ),
+                [BLOCKS.OL_LIST]: (node, children) => (
+                  <ol className="list-decimal ml-6 mb-6">{children}</ol>
+                ),
+                [BLOCKS.LIST_ITEM]: (node, children) => (
+                  <li className="mb-2">{children}</li>
+                ),
+              },
+            })}
           </div>
         </div>
 

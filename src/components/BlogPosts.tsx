@@ -1,6 +1,7 @@
 "use client";
 
 import { BlogPost, getBlogPosts } from "@/lib/blogData";
+import { Category, getCategories } from "@/lib/categoryData";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BsCalendar2Heart } from "react-icons/bs";
@@ -8,14 +9,22 @@ import { TbClockHeart } from "react-icons/tb";
 
 export default function BlogPosts() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const allPosts = getBlogPosts();
-    setPosts(allPosts.slice(0, 3)); // Show only first 3 posts on homepage
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      const allPosts = await getBlogPosts();
+      setPosts(allPosts.slice(0, 3)); // Show only first 3 posts on homepage
 
-  const categories = ["All", "Story", "Article", "Adventure"];
+      const fetchedCategories = await getCategories();
+      setCategories(fetchedCategories);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   return (
     <section id="blog" className="py-12 sm:py-16 md:py-20 bg-cream">
@@ -30,73 +39,98 @@ export default function BlogPosts() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 px-4">
+            <button
+              onClick={() => setSelectedCategory("All")}
+              className={`px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-300 ${
+                selectedCategory === "All"
+                  ? "bg-moss text-white shadow-lg"
+                  : "bg-white text-sage hover:bg-sage"
+              }`}
+            >
+              All
+            </button>
             {categories.map((category) => (
               <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
+                key={category.id}
+                onClick={() => setSelectedCategory(category.name)}
                 className={`px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-300 ${
-                  selectedCategory === category
+                  selectedCategory === category.name
                     ? "bg-moss text-white shadow-lg"
                     : "bg-white text-sage hover:bg-sage"
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
-          {posts.map((post, index) => (
-            <article
-              key={post.id}
-              className="floating-card overflow-hidden"
-              style={{ animationDelay: `${index * 200}ms` }}
-            >
-              <div className="aspect-video bg-sage/20 relative overflow-hidden">
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
-                    {post.category}
-                  </span>
+          {loading ? (
+            // Loading skeletons
+            [1, 2, 3].map((i) => (
+              <div key={i} className="floating-card overflow-hidden animate-pulse">
+                <div className="aspect-video bg-sage/20"></div>
+                <div className="p-4 sm:p-6">
+                  <div className="h-4 bg-sage/20 rounded mb-3"></div>
+                  <div className="h-6 bg-sage/20 rounded mb-3"></div>
+                  <div className="h-4 bg-sage/20 rounded mb-2"></div>
+                  <div className="h-4 bg-sage/20 rounded w-3/4"></div>
                 </div>
               </div>
-
-              <div className="p-4 sm:p-6">
-                <div className="flex items-center text-xs sm:text-sm text-sage mb-2 sm:mb-3">
-                  <div className="text-xs sm:text-sm mr-1 sm:mr-2">
-                    <BsCalendar2Heart />
+            ))
+          ) : (
+            posts.map((post, index) => (
+              <article
+                key={post.id}
+                className="floating-card overflow-hidden"
+                style={{ animationDelay: `${index * 200}ms` }}
+              >
+                <div className="aspect-video bg-sage/20 relative overflow-hidden">
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                  />
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
+                      {post.category}
+                    </span>
                   </div>
-                  <span className="text-xs sm:text-sm">{new Date(post.date).toLocaleDateString()}</span>
-                  <span className="mx-1 sm:mx-2">•</span>
-                  <div className="text-xs sm:text-sm mr-1 sm:mr-2">
-                    <TbClockHeart />
-                  </div>
-                  <span className="text-xs sm:text-sm">{post.readTime}</span>
                 </div>
 
-                <h3 className="text-lg sm:text-xl font-bold text-forest mb-2 sm:mb-3 line-clamp-2">
-                  {post.title}
-                </h3>
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center text-xs sm:text-sm text-sage mb-2 sm:mb-3">
+                    <div className="text-xs sm:text-sm mr-1 sm:mr-2">
+                      <BsCalendar2Heart />
+                    </div>
+                    <span className="text-xs sm:text-sm">{new Date(post.date).toLocaleDateString()}</span>
+                    <span className="mx-1 sm:mx-2">•</span>
+                    <div className="text-xs sm:text-sm mr-1 sm:mr-2">
+                      <TbClockHeart />
+                    </div>
+                    <span className="text-xs sm:text-sm">{post.readTime}</span>
+                  </div>
 
-                <p className="text-sm sm:text-base text-sage leading-relaxed mb-3 sm:mb-4 line-clamp-3">
-                  {post.excerpt}
-                </p>
+                  <h3 className="text-lg sm:text-xl font-bold text-forest mb-2 sm:mb-3 line-clamp-2">
+                    {post.title}
+                  </h3>
 
-                <Link
-                  href={`/post/${post.id}`}
-                  className="inline-flex items-center text-sm sm:text-base text-moss hover:text-forest font-medium transition-colors"
-                >
-                  Read More
-                  <div className="icon-arrow-right text-xs sm:text-sm ml-2"></div>
-                </Link>
-              </div>
-            </article>
-          ))}
+                  <p className="text-sm sm:text-base text-sage leading-relaxed mb-3 sm:mb-4 line-clamp-3">
+                    {post.excerpt}
+                  </p>
+
+                  <Link
+                    href={`/post/${post.id}`}
+                    className="inline-flex items-center text-sm sm:text-base text-moss hover:text-forest font-medium transition-colors"
+                  >
+                    Read More
+                    <div className="icon-arrow-right text-xs sm:text-sm ml-2"></div>
+                  </Link>
+                </div>
+              </article>
+            ))
+          )}
         </div>
 
         <div className="text-center px-4">
