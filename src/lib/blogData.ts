@@ -1,5 +1,5 @@
 import client from './contentful';
-import { Entry } from 'contentful';
+import { Entry, EntrySkeletonType } from 'contentful';
 import { Document } from '@contentful/rich-text-types';
 import { documentToPlainTextString } from '@contentful/rich-text-plain-text-renderer';
 
@@ -18,33 +18,37 @@ export interface BlogPost {
   image: string;
 }
 
-interface ContentfulBlogPost {
-  title: string;
-  slug: string;
-  excerpt: Document;
-  content: Document;
-  category: {
-    sys: {
-      id: string;
-    };
-    fields: {
-      name: string;
-      slug: string;
-    };
-  };
-  publishDate: string;
-  readTime: string;
-  featuredImage: {
-    fields: {
-      file: {
-        url: string;
+interface ContentfulBlogPost extends EntrySkeletonType {
+  contentTypeId: 'blogPost';
+  fields: {
+    title: string;
+    slug: string;
+    excerpt: Document;
+    content: Document;
+    category?: Entry<{
+      contentTypeId: 'category';
+      fields: {
+        name: string;
+        slug: string;
+      };
+    }, undefined, string>;
+    publishDate: string;
+    readTime: string;
+    featuredImage?: {
+      fields: {
+        file: {
+          url: string;
+        };
       };
     };
   };
 }
 
-function transformContentfulPost(entry: Entry<ContentfulBlogPost>): BlogPost {
+function transformContentfulPost(entry: any): BlogPost {
   const fields = entry.fields;
+  const categoryName = fields.category?.fields?.name || '';
+  const imageUrl = fields.featuredImage?.fields?.file?.url ? `https:${fields.featuredImage.fields.file.url}` : '';
+
   return {
     id: entry.sys.id,
     title: fields.title,
@@ -53,19 +57,19 @@ function transformContentfulPost(entry: Entry<ContentfulBlogPost>): BlogPost {
     excerptRichText: fields.excerpt,
     content: documentToPlainTextString(fields.content),
     contentRichText: fields.content,
-    category: fields.category?.fields?.name || '',
+    category: categoryName,
     date: fields.publishDate,
     readTime: fields.readTime,
     featured: false, // You can add a "featured" boolean field if needed
-    image: fields.featuredImage?.fields?.file?.url ? `https:${fields.featuredImage.fields.file.url}` : '',
+    image: imageUrl,
   };
 }
 
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
   try {
-    const response = await client.getEntries<ContentfulBlogPost>({
+    const response = await client.getEntries({
       content_type: 'blogPost',
-      order: ['-fields.publishDate'],
+      order: ['-fields.publishDate'] as any,
     });
     return response.items.map(transformContentfulPost);
   } catch (error) {
@@ -76,9 +80,9 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
 
 export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
   try {
-    const response = await client.getEntries<ContentfulBlogPost>({
+    const response = await client.getEntries({
       content_type: 'blogPost',
-      order: ['-fields.publishDate'],
+      order: ['-fields.publishDate'] as any,
       limit: 3,
     });
     return response.items.map(transformContentfulPost);
@@ -90,12 +94,12 @@ export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
 
 export const getPostsByCategory = async (categorySlug: string): Promise<BlogPost[]> => {
   try {
-    const response = await client.getEntries<ContentfulBlogPost>({
+    const response = await client.getEntries({
       content_type: 'blogPost',
       'fields.category.sys.contentType.sys.id': 'category',
       'fields.category.fields.slug': categorySlug,
-      order: ['-fields.publishDate'],
-    });
+      order: ['-fields.publishDate'] as any,
+    } as any);
     return response.items.map(transformContentfulPost);
   } catch (error) {
     console.error('Error fetching posts by category from Contentful:', error);
@@ -105,7 +109,7 @@ export const getPostsByCategory = async (categorySlug: string): Promise<BlogPost
 
 export const getPostById = async (id: string): Promise<BlogPost | null> => {
   try {
-    const entry = await client.getEntry<ContentfulBlogPost>(id);
+    const entry = await client.getEntry(id);
     return transformContentfulPost(entry);
   } catch (error) {
     console.error('Error fetching post by ID from Contentful:', error);
