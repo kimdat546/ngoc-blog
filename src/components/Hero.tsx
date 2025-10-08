@@ -64,37 +64,37 @@ export default function Hero() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-20 text-center max-w-4xl mx-auto px-6">
-        <div className="mb-8 flex justify-center">
-          <div className="w-20 h-20 bg-moss rounded-full flex items-center justify-center animate-float">
-            <div className="icon-sparkles !text-3xl text-white"></div>
+      <div className="relative z-20 text-center max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="mb-6 sm:mb-8 flex justify-center">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-moss rounded-full flex items-center justify-center animate-float">
+            <div className="icon-sparkles !text-2xl sm:!text-3xl text-white"></div>
           </div>
         </div>
 
-        <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight drop-shadow-lg">
           Welcome to My
           <span className="block text-cream">Forest Blog</span>
         </h1>
 
-        <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+        <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed drop-shadow-md px-4">
           Join me on a journey through nature-inspired stories, personal
           adventures, and articles about the magical connections between life
           and the natural world.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
           <button
             onClick={() => scrollToSection("blog")}
-            className="btn-forest text-lg px-8 py-4"
+            className="btn-forest text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
           >
             <div className="flex items-center justify-center space-x-2">
               <span>Read My Stories</span>
-              <div className="icon-arrow-right text-lg"></div>
+              <div className="icon-arrow-right text-base sm:text-lg"></div>
             </div>
           </button>
           <button
             onClick={() => scrollToSection("about")}
-            className="px-8 py-4 text-lg bg-moss border-2 border-moss text-white hover:border-white rounded-full transition-all duration-300"
+            className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg bg-moss border-2 border-moss text-white hover:border-white rounded-full transition-all duration-300"
           >
             About Me
           </button>

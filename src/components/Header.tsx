@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +20,7 @@ export default function Header() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -62,10 +64,60 @@ export default function Header() {
           </button>
         </div>
 
-        <Link href="/posts" className="btn-forest">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className={`md:hidden ${isScrolled ? 'text-forest' : 'text-white'}`}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isMobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+
+        <Link href="/posts" className="hidden md:inline-block btn-forest">
           All Posts
         </Link>
       </nav>
+
+      {/* Mobile menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white/95 backdrop-blur-sm shadow-lg">
+          <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
+            <button
+              onClick={() => scrollToSection('hero')}
+              className="text-forest hover:text-moss transition-colors text-left"
+            >
+              Home
+            </button>
+            <button
+              onClick={() => scrollToSection('about')}
+              className="text-forest hover:text-moss transition-colors text-left"
+            >
+              About
+            </button>
+            <button
+              onClick={() => scrollToSection('blog')}
+              className="text-forest hover:text-moss transition-colors text-left"
+            >
+              Blog
+            </button>
+            <button
+              onClick={() => scrollToSection('contact')}
+              className="text-forest hover:text-moss transition-colors text-left"
+            >
+              Contact
+            </button>
+            <Link href="/posts" className="btn-forest text-center" onClick={() => setIsMobileMenuOpen(false)}>
+              All Posts
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

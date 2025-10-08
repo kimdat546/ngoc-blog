@@ -4,23 +4,23 @@ import { LuFacebook, LuTwitter } from "react-icons/lu";
 
 export default function Footer() {
   return (
-    <footer className="bg-forest text-white py-12 relative">
-      <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+    <footer className="bg-forest text-white py-8 sm:py-10 md:py-12 relative">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-sage rounded-full flex items-center justify-center">
-                <div className="icon-leaf text-xl text-white"></div>
+            <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-sage rounded-full flex items-center justify-center">
+                <div className="icon-leaf text-lg sm:text-xl text-white"></div>
               </div>
-              <span className="text-2xl font-bold">My Forest Blog</span>
+              <span className="text-xl sm:text-2xl font-bold">My Forest Blog</span>
             </div>
-            <p className="opacity-80 max-w-md leading-relaxed">
+            <p className="text-sm sm:text-base opacity-80 max-w-md leading-relaxed">
               A personal blog sharing nature-inspired stories, adventures, and
               articles about the magical connections between life and the
               natural world.
             </p>
-            <div className="flex space-x-4 mt-6">
+            <div className="flex space-x-3 sm:space-x-4 mt-4 sm:mt-6">
               <div className="w-8 h-8 bg-sage rounded-full flex items-center justify-center hover:bg-moss transition-colors cursor-pointer">
                 <div className="text-sm text-white">
                   <LuFacebook />
@@ -41,8 +41,8 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Explore</h4>
-            <ul className="space-y-2 opacity-80">
+            <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Explore</h4>
+            <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base opacity-80">
               <li>
                 <a href="#" className="hover:text-sage transition-colors">
                   Latest Stories
@@ -68,8 +68,8 @@ export default function Footer() {
 
           {/* Community */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Community</h4>
-            <ul className="space-y-2 opacity-80">
+            <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Community</h4>
+            <ul className="space-y-1.5 sm:space-y-2 text-sm sm:text-base opacity-80">
               <li>
                 <a href="#" className="hover:text-sage transition-colors">
                   Join Us
@@ -95,8 +95,8 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-white/20 pt-8 text-center opacity-80">
-          <p>
+        <div className="border-t border-white/20 pt-6 sm:pt-8 text-center opacity-80">
+          <p className="text-xs sm:text-sm md:text-base">
             &copy; 2025 My Forest Blog. All rights reserved. Made with love for
             nature and storytelling.
           </p>
