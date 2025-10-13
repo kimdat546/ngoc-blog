@@ -9,7 +9,7 @@ import { getBlogPosts, getPostById, BlogPost } from '@/lib/blogData';
 import { BsCalendar2Heart } from 'react-icons/bs';
 import { TbClockHeart } from 'react-icons/tb';
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
-import { BLOCKS } from '@contentful/rich-text-types';
+import { BLOCKS, INLINES } from '@contentful/rich-text-types';
 
 export default function PostPage() {
   const params = useParams();
@@ -157,6 +157,22 @@ export default function PostPage() {
                 [BLOCKS.LIST_ITEM]: (node, children) => (
                   <li className="mb-2">{children}</li>
                 ),
+                [BLOCKS.EMBEDDED_ASSET]: (node) => {
+                  const { file, title } = node.data.target.fields;
+                  const imageUrl = file?.url ? `https:${file.url}` : '';
+                  return (
+                    <div className="my-8">
+                      <img
+                        src={imageUrl}
+                        alt={title || ''}
+                        className="w-full rounded-lg"
+                      />
+                      {title && (
+                        <p className="text-sm text-sage text-center mt-2">{title}</p>
+                      )}
+                    </div>
+                  );
+                },
               },
             })}
           </div>
