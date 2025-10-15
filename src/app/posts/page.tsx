@@ -7,6 +7,7 @@ import { Category, getCategories } from "@/lib/categoryData";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BsCalendar2Heart } from "react-icons/bs";
+import { FaArrowRightLong } from "react-icons/fa6";
 import { IoSearch } from "react-icons/io5";
 import { TbClockHeart } from "react-icons/tb";
 import { VscDebugDisconnect } from "react-icons/vsc";
@@ -109,67 +110,71 @@ export default function PostsPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {loading ? (
-              // Loading skeletons
-              [1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="floating-card overflow-hidden animate-pulse">
-                  <div className="aspect-video bg-sage/20"></div>
-                  <div className="p-6">
-                    <div className="h-4 bg-sage/20 rounded mb-3"></div>
-                    <div className="h-6 bg-sage/20 rounded mb-3"></div>
-                    <div className="h-4 bg-sage/20 rounded mb-2"></div>
-                    <div className="h-4 bg-sage/20 rounded w-3/4"></div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              filteredPosts.map((post) => (
-                <article key={post.id} className="floating-card overflow-hidden">
-                  <div className="aspect-video bg-sage/20 relative overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
-                        {post.category}
-                      </span>
+            {loading
+              ? // Loading skeletons
+                [1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="floating-card overflow-hidden animate-pulse"
+                  >
+                    <div className="aspect-video bg-sage/20"></div>
+                    <div className="p-6">
+                      <div className="h-4 bg-sage/20 rounded mb-3"></div>
+                      <div className="h-6 bg-sage/20 rounded mb-3"></div>
+                      <div className="h-4 bg-sage/20 rounded mb-2"></div>
+                      <div className="h-4 bg-sage/20 rounded w-3/4"></div>
                     </div>
                   </div>
-
-                  <div className="p-6">
-                    <div className="flex items-center text-sm text-sage mb-3">
-                      <div className="text-sm mr-2">
-                        <BsCalendar2Heart />
+                ))
+              : filteredPosts.map((post) => (
+                  <article
+                    key={post.id}
+                    className="floating-card overflow-hidden"
+                  >
+                    <div className="aspect-video bg-sage/20 relative overflow-hidden">
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
+                          {post.category}
+                        </span>
                       </div>
-                      <span>{new Date(post.date).toLocaleDateString()}</span>
-                      <span className="mx-2">•</span>
-                      <div className="text-sm mr-2">
-                        <TbClockHeart />
-                      </div>
-                      <span>{post.readTime}</span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-forest mb-3">
-                      {post.title}
-                    </h3>
+                    <div className="p-6">
+                      <div className="flex items-center text-sm text-sage mb-3">
+                        <div className="text-sm mr-2">
+                          <BsCalendar2Heart />
+                        </div>
+                        <span>{new Date(post.date).toLocaleDateString()}</span>
+                        <span className="mx-2">•</span>
+                        <div className="text-sm mr-2">
+                          <TbClockHeart />
+                        </div>
+                        <span>{post.readTime}</span>
+                      </div>
 
-                    <p className="text-sage leading-relaxed mb-4">
-                      {post.excerpt}
-                    </p>
+                      <h3 className="text-xl font-bold text-forest mb-3">
+                        {post.title}
+                      </h3>
 
-                    <Link
-                      href={`/post/${post.id}`}
-                      className="inline-flex items-center text-moss hover:text-forest font-medium transition-colors"
-                    >
-                      Read More
-                      <div className="icon-arrow-right text-sm ml-2"></div>
-                    </Link>
-                  </div>
-                </article>
-              ))
-            )}
+                      <p className="text-sage leading-relaxed mb-4">
+                        {post.excerpt}
+                      </p>
+
+                      <Link
+                        href={`/post/${post.id}`}
+                        className="inline-flex items-center text-moss hover:text-forest font-medium transition-colors"
+                      >
+                        Đọc nè
+                        <FaArrowRightLong className="ml-2" />
+                      </Link>
+                    </div>
+                  </article>
+                ))}
           </div>
 
           {!loading && filteredPosts.length === 0 && (

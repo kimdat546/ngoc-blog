@@ -136,7 +136,7 @@ export default function PostPage() {
           <div className="text-lg leading-relaxed text-forest">
             {documentToReactComponents(post.contentRichText, {
               renderNode: {
-                [BLOCKS.PARAGRAPH]: (node, children) => (
+                [BLOCKS.PARAGRAPH]: (_node, children) => (
                   <p className="mb-6">{children}</p>
                 ),
                 [BLOCKS.HEADING_1]: (node, children) => (
@@ -147,6 +147,13 @@ export default function PostPage() {
                 ),
                 [BLOCKS.HEADING_3]: (node, children) => (
                   <h3 className="text-xl font-bold mb-3 mt-4">{children}</h3>
+                ),
+                [BLOCKS.QUOTE]: (node, children) => (
+                  <blockquote className="blog-quote">
+                    <div className="quote-content">
+                      {children}
+                    </div>
+                  </blockquote>
                 ),
                 [BLOCKS.UL_LIST]: (node, children) => (
                   <ul className="list-disc ml-6 mb-6">{children}</ul>
@@ -197,7 +204,7 @@ export default function PostPage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-4">
+                  <div className="py-4">
                     <h4 className="font-bold text-forest mb-2">
                       {relatedPost.title}
                     </h4>

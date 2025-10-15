@@ -55,6 +55,40 @@
     @apply w-4 h-4 rounded-full opacity-60 animate-pulse;
     background: radial-gradient(circle, var(--golden), var(--sage-green));
   }
+
+  .blog-quote {
+    @apply my-8 pl-12 pr-6 py-4 rounded-lg relative;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--warm-white) 100%);
+    border-left: 4px solid var(--moss-green);
+    font-style: italic;
+    color: var(--forest-green);
+    box-shadow: 0 4px 12px var(--shadow-soft);
+  }
+
+  .blog-quote::before {
+    content: '❝';
+    font-size: 4rem;
+    line-height: 0;
+    position: absolute;
+    left: 0.25rem;
+    top: 2.5rem;
+    color: var(--sage-green);
+    opacity: 0.3;
+    font-family: Georgia, serif;
+  }
+
+  .blog-quote .quote-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .blog-quote .quote-content p {
+    margin-bottom: 0 !important;
+  }
+
+  .blog-quote .quote-content p:not(:last-child) {
+    margin-bottom: 1rem !important;
+  }
 }
 
 @layer utilities {
