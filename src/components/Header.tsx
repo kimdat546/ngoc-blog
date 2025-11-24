@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,12 +18,33 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    // Handle scrolling to section when page loads with hash
+    if (pathname === '/' && window.location.hash) {
+      const sectionId = window.location.hash.substring(1);
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [pathname]);
+
   const scrollToSection = (sectionId: string) => {
+    setIsMobileMenuOpen(false);
+
+    // If not on homepage, navigate to homepage first
+    if (pathname !== '/') {
+      router.push(`/#${sectionId}`);
+      return;
+    }
+
+    // If on homepage, scroll to section
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
-    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -40,25 +64,25 @@ export default function Header() {
         <div className="hidden md:flex items-center space-x-8">
           <button
             onClick={() => scrollToSection('hero')}
-            className="text-forest hover:text-moss transition-colors"
+            className="text-forest hover:text-moss transition-colors cursor-pointer"
           >
             Home
           </button>
           <button
             onClick={() => scrollToSection('about')}
-            className="text-forest hover:text-moss transition-colors"
+            className="text-forest hover:text-moss transition-colors cursor-pointer"
           >
             About
           </button>
           <button
             onClick={() => scrollToSection('blog')}
-            className="text-forest hover:text-moss transition-colors"
+            className="text-forest hover:text-moss transition-colors cursor-pointer"
           >
             Blog
           </button>
           <button
             onClick={() => scrollToSection('contact')}
-            className="text-forest hover:text-moss transition-colors"
+            className="text-forest hover:text-moss transition-colors cursor-pointer"
           >
             Contact
           </button>

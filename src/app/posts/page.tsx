@@ -82,31 +82,33 @@ export default function PostsPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4">
-              <button
-                onClick={() => setSelectedCategory("All")}
-                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                  selectedCategory === "All"
-                    ? "bg-moss text-white shadow-lg"
-                    : "bg-white text-sage hover:bg-sage"
-                }`}
-              >
-                All
-              </button>
-              {categories.map((category) => (
+            {categories.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-4">
                 <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.name)}
+                  onClick={() => setSelectedCategory("All")}
                   className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                    selectedCategory === category.name
+                    selectedCategory === "All"
                       ? "bg-moss text-white shadow-lg"
                       : "bg-white text-sage hover:bg-sage"
                   }`}
                 >
-                  {category.name}
+                  All
                 </button>
-              ))}
-            </div>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.name)}
+                    className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                      selectedCategory === category.name
+                        ? "bg-moss text-white shadow-lg"
+                        : "bg-white text-sage hover:bg-sage"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -127,52 +129,48 @@ export default function PostsPage() {
                   </div>
                 ))
               : filteredPosts.map((post) => (
-                  <article
-                    key={post.id}
-                    className="floating-card overflow-hidden"
-                  >
-                    <div className="aspect-video bg-sage/20 relative overflow-hidden">
-                      <img
-                        src={post.image}
-                        alt={post.title}
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
-                          {post.category}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-6">
-                      <div className="flex items-center text-sm text-sage mb-3">
-                        <div className="text-sm mr-2">
-                          <BsCalendar2Heart />
+                  <article key={post.id} className="floating-card overflow-hidden">
+                    <Link href={`/post/${post.id}`} className="block">
+                      <div className="aspect-video bg-sage/20 relative overflow-hidden">
+                        <img
+                          src={post.image}
+                          alt={post.title}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        />
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
+                            {post.category}
+                          </span>
                         </div>
-                        <span>{new Date(post.date).toLocaleDateString()}</span>
-                        <span className="mx-2">•</span>
-                        <div className="text-sm mr-2">
-                          <TbClockHeart />
-                        </div>
-                        <span>{post.readTime}</span>
                       </div>
 
-                      <h3 className="text-xl font-bold text-forest mb-3">
-                        {post.title}
-                      </h3>
+                      <div className="p-6">
+                        <div className="flex items-center text-sm text-sage mb-3">
+                          <div className="text-sm mr-2">
+                            <BsCalendar2Heart />
+                          </div>
+                          <span>{new Date(post.date).toLocaleDateString()}</span>
+                          <span className="mx-2">•</span>
+                          <div className="text-sm mr-2">
+                            <TbClockHeart />
+                          </div>
+                          <span>{post.readTime}</span>
+                        </div>
 
-                      <p className="text-sage leading-relaxed mb-4">
-                        {post.excerpt}
-                      </p>
+                        <h3 className="text-xl font-bold text-forest mb-3">
+                          {post.title}
+                        </h3>
 
-                      <Link
-                        href={`/post/${post.id}`}
-                        className="inline-flex items-center text-moss hover:text-forest font-medium transition-colors"
-                      >
-                        Đọc nè
-                        <FaArrowRightLong className="ml-2" />
-                      </Link>
-                    </div>
+                        <p className="text-sage leading-relaxed mb-4">
+                          {post.excerpt}
+                        </p>
+
+                        <div className="inline-flex items-center text-moss hover:text-forest font-medium transition-colors">
+                          Đọc nè
+                          <FaArrowRightLong className="ml-2" />
+                        </div>
+                      </div>
+                    </Link>
                   </article>
                 ))}
           </div>

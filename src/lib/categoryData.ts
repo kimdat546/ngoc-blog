@@ -28,7 +28,6 @@ export const getCategories = async (): Promise<Category[]> => {
   try {
     const response = await client.getEntries({
       content_type: 'category',
-      order: ['fields.name'] as any,
     });
     return response.items.map(transformContentfulCategory);
   } catch (error) {

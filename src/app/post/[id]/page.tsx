@@ -9,7 +9,8 @@ import { getBlogPosts, getPostById, BlogPost } from '@/lib/blogData';
 import { BsCalendar2Heart } from 'react-icons/bs';
 import { TbClockHeart } from 'react-icons/tb';
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
-import { BLOCKS, INLINES } from '@contentful/rich-text-types';
+import { BLOCKS, Block, Inline } from '@contentful/rich-text-types';
+import type { ReactNode } from 'react';
 
 export default function PostPage() {
   const params = useParams();
@@ -126,8 +127,19 @@ export default function PostPage() {
           <div className="text-xl text-sage leading-relaxed mb-8">
             {documentToReactComponents(post.excerptRichText, {
               renderNode: {
-                [BLOCKS.PARAGRAPH]: (node, children) => (
-                  <p className="mb-4">{children}</p>
+                [BLOCKS.PARAGRAPH]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => <p className="mb-4">{children}</p>,
+                [BLOCKS.QUOTE]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => (
+                  <blockquote className="blog-quote">
+                    <div className="quote-content text-lg leading-relaxed text-forest">
+                      {children}
+                    </div>
+                  </blockquote>
                 ),
               },
             })}
@@ -136,46 +148,70 @@ export default function PostPage() {
           <div className="text-lg leading-relaxed text-forest">
             {documentToReactComponents(post.contentRichText, {
               renderNode: {
-                [BLOCKS.PARAGRAPH]: (_node, children) => (
-                  <p className="mb-6">{children}</p>
-                ),
-                [BLOCKS.HEADING_1]: (node, children) => (
+                [BLOCKS.PARAGRAPH]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => <p className="mb-6">{children}</p>,
+                [BLOCKS.HEADING_1]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => (
                   <h1 className="text-3xl font-bold mb-4 mt-8">{children}</h1>
                 ),
-                [BLOCKS.HEADING_2]: (node, children) => (
+                [BLOCKS.HEADING_2]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => (
                   <h2 className="text-2xl font-bold mb-4 mt-6">{children}</h2>
                 ),
-                [BLOCKS.HEADING_3]: (node, children) => (
+                [BLOCKS.HEADING_3]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => (
                   <h3 className="text-xl font-bold mb-3 mt-4">{children}</h3>
                 ),
-                [BLOCKS.QUOTE]: (node, children) => (
+                [BLOCKS.QUOTE]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => (
                   <blockquote className="blog-quote">
-                    <div className="quote-content">
-                      {children}
-                    </div>
+                    <div className="quote-content">{children}</div>
                   </blockquote>
                 ),
-                [BLOCKS.UL_LIST]: (node, children) => (
-                  <ul className="list-disc ml-6 mb-6">{children}</ul>
-                ),
-                [BLOCKS.OL_LIST]: (node, children) => (
-                  <ol className="list-decimal ml-6 mb-6">{children}</ol>
-                ),
-                [BLOCKS.LIST_ITEM]: (node, children) => (
-                  <li className="mb-2">{children}</li>
-                ),
-                [BLOCKS.EMBEDDED_ASSET]: (node) => {
-                  const { file, title } = node.data.target.fields;
-                  const imageUrl = file?.url ? `https:${file.url}` : '';
+                [BLOCKS.UL_LIST]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => <ul className="list-disc ml-6 mb-6">{children}</ul>,
+                [BLOCKS.OL_LIST]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => <ol className="list-decimal ml-6 mb-6">{children}</ol>,
+                [BLOCKS.LIST_ITEM]: (
+                  _node: Block | Inline,
+                  children: ReactNode
+                ) => <li className="mb-2">{children}</li>,
+                [BLOCKS.EMBEDDED_ASSET]: (node: any) => {
+                  const { file, title, description } = node.data.target.fields;
+                  const imageUrl = file?.url ? `https:${file.url}` : "";
+                  const width = file?.details?.image?.width;
+                  const height = file?.details?.image?.height;
+
                   return (
-                    <div className="my-8">
+                    <div className="my-8 flex flex-col items-center">
                       <img
                         src={imageUrl}
-                        alt={title || ''}
-                        className="w-full rounded-lg"
+                        alt={title || description || ""}
+                        className="rounded-lg"
+                        style={{
+                          width: width ? `${Math.min(width, 896)}px` : 'auto',
+                          height: 'auto',
+                          maxWidth: '100%'
+                        }}
                       />
-                      {title && (
-                        <p className="text-sm text-sage text-center mt-2">{title}</p>
+                      {(title || description) && (
+                        <p className="text-sm text-sage text-center mt-2 italic">
+                          {title || description}
+                        </p>
                       )}
                     </div>
                   );
@@ -197,12 +233,17 @@ export default function PostPage() {
                   href={`/post/${relatedPost.id}`}
                   className="floating-card overflow-hidden block"
                 >
-                  <div className="aspect-video bg-sage/20 overflow-hidden">
+                  <div className="aspect-video bg-sage/20 relative overflow-hidden">
                     <img
                       src={relatedPost.image}
                       alt={relatedPost.title}
                       className="w-full h-full object-cover"
                     />
+                    <div className="absolute top-1 right-1">
+                      <span className="px-3 py-1 bg-moss text-white rounded-full text-xs font-medium">
+                        {relatedPost.category}
+                      </span>
+                    </div>
                   </div>
                   <div className="py-4">
                     <h4 className="font-bold text-forest mb-2">
