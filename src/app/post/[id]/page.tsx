@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { getBlogPosts, getPostById, BlogPost } from '@/lib/blogData';
-import { BsCalendar2Heart } from 'react-icons/bs';
-import { TbClockHeart } from 'react-icons/tb';
-import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
-import { BLOCKS, Block, Inline } from '@contentful/rich-text-types';
-import type { ReactNode } from 'react';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { getBlogPosts, getPostById, BlogPost } from "@/lib/blogData";
+import { BsCalendar2Heart } from "react-icons/bs";
+import { TbClockHeart } from "react-icons/tb";
+import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
+import { BLOCKS, INLINES, Block, Inline } from "@contentful/rich-text-types";
+import type { ReactNode } from "react";
 
 export default function PostPage() {
   const params = useParams();
@@ -30,7 +30,9 @@ export default function PostPage() {
         if (foundPost) {
           const allPosts = await getBlogPosts();
           const related = allPosts
-            .filter(p => p.id !== foundPost.id && p.category === foundPost.category)
+            .filter(
+              (p) => p.id !== foundPost.id && p.category === foundPost.category
+            )
             .slice(0, 3);
           setRelatedPosts(related);
         }
@@ -69,8 +71,12 @@ export default function PostPage() {
         <Header />
         <div className="flex items-center justify-center pt-24 min-h-screen">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-forest mb-4">Post not found</h1>
-            <Link href="/posts" className="btn-forest">View All Posts</Link>
+            <h1 className="text-2xl font-bold text-forest mb-4">
+              Post not found
+            </h1>
+            <Link href="/posts" className="btn-forest">
+              View All Posts
+            </Link>
           </div>
         </div>
         <Footer />
@@ -194,7 +200,6 @@ export default function PostPage() {
                   const { file, title, description } = node.data.target.fields;
                   const imageUrl = file?.url ? `https:${file.url}` : "";
                   const width = file?.details?.image?.width;
-                  const height = file?.details?.image?.height;
 
                   return (
                     <div className="my-8 flex flex-col items-center">
@@ -203,9 +208,9 @@ export default function PostPage() {
                         alt={title || description || ""}
                         className="rounded-lg"
                         style={{
-                          width: width ? `${Math.min(width, 896)}px` : 'auto',
-                          height: 'auto',
-                          maxWidth: '100%'
+                          width: width ? `${Math.min(width, 896)}px` : "auto",
+                          height: "auto",
+                          maxWidth: "100%",
                         }}
                       />
                       {(title || description) && (
@@ -214,6 +219,73 @@ export default function PostPage() {
                         </p>
                       )}
                     </div>
+                  );
+                },
+                [BLOCKS.EMBEDDED_ENTRY]: (node: any) => {
+                  const contentType = node.data.target.sys.contentType?.sys?.id;
+                  const fields = node.data.target.fields;
+
+                  // Handle different content types
+                  if (contentType === "blogPost") {
+                    return (
+                      <div className="my-8 p-6 bg-cream rounded-lg border-l-4 border-moss">
+                        <h4 className="text-lg font-bold text-forest mb-2">
+                          🍃 Related Post: {fields.title}
+                        </h4>
+                        <p className="text-sage mb-3">
+                          {fields.excerpt?.content?.[0]?.content?.[0]?.value ||
+                            ""}
+                        </p>
+                        <Link
+                          href={`/post/${node.data.target.sys.id}`}
+                          className="text-moss hover:text-forest font-medium"
+                        >
+                          Đọc tiếp nè →
+                        </Link>
+                      </div>
+                    );
+                  }
+
+                  // Default rendering for other content types
+                  return (
+                    <div className="my-8 p-6 bg-cream rounded-lg">
+                      <p className="text-sm text-sage italic">
+                        Embedded content: {contentType || "Unknown type"}
+                      </p>
+                      {fields.title && (
+                        <h4 className="font-bold text-forest mt-2">
+                          {fields.title}
+                        </h4>
+                      )}
+                      {fields.description && (
+                        <p className="text-sage mt-2">{fields.description}</p>
+                      )}
+                    </div>
+                  );
+                },
+                [INLINES.EMBEDDED_ENTRY]: (node: any) => {
+                  const contentType = node.data.target.sys.contentType?.sys?.id;
+                  const fields = node.data.target.fields;
+
+                  // Handle inline embedded entries
+                  if (contentType === "blogPost" && fields.title) {
+                    return (
+                      <Link
+                        href={`/post/${node.data.target.sys.id}`}
+                        className="inline-flex items-center gap-1 text-moss hover:text-forest font-medium transition-colors border-b-2 border-moss/30 hover:border-moss"
+                      >
+                        <span>🍃</span>
+                        <span>{fields.title}</span>
+                      </Link>
+                    );
+                  }
+
+                  // Default inline rendering
+                  return (
+                    <span className="inline-flex items-center gap-1 text-moss font-medium italic">
+                      <span>✨</span>
+                      <span>{fields.title || fields.name || "content"}</span>
+                    </span>
                   );
                 },
               },
