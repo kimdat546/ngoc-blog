@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
@@ -55,9 +56,13 @@ export default function Header() {
     >
       <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-moss rounded-full flex items-center justify-center">
-            <div className="icon-leaf text-lg text-white"></div>
-          </div>
+          <Image
+            src="/logo.svg"
+            alt="Forest Blog Logo"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+          />
           <span className="text-xl font-bold text-forest">My Forest Blog</span>
         </Link>
 
