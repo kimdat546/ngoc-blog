@@ -42,10 +42,12 @@ export default function PostsPage() {
     }
 
     if (searchTerm) {
+      const q = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (post) =>
-          post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
+          post.title.toLowerCase().includes(q) ||
+          post.excerpt.toLowerCase().includes(q) ||
+          post.content.toLowerCase().includes(q)
       );
     }
 
@@ -130,7 +132,7 @@ export default function PostsPage() {
                 ))
               : filteredPosts.map((post) => (
                   <article key={post.id} className="floating-card overflow-hidden">
-                    <Link href={`/post/${post.id}`} className="block">
+                    <Link href={`/post/${post.slug}`} className="block">
                       <div className="aspect-video bg-sage/20 relative overflow-hidden">
                         <img
                           src={post.image}

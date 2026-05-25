@@ -103,7 +103,7 @@ export default function BlogPosts() {
                   className="floating-card overflow-hidden"
                   style={{ animationDelay: `${index * 200}ms` }}
                 >
-                  <Link href={`/post/${post.id}`} className="block">
+                  <Link href={`/post/${post.slug}`} className="block">
                     <div className="aspect-video bg-sage/20 relative overflow-hidden">
                       <img
                         src={post.image}

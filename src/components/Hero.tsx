@@ -44,8 +44,6 @@ export default function Hero() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-forest/20"></div>
 
       {/* Floating Forest Spirits */}
       <div className="absolute inset-0">
@@ -71,12 +69,12 @@ export default function Hero() {
           </div>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight drop-shadow-lg">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight [text-shadow:0_0_24px_rgba(0,0,0,0.55),0_0_12px_rgba(0,0,0,0.45)]">
           Welcome to My
           <span className="block text-cream">Forest Blog</span>
         </h1>
 
-        <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed drop-shadow-md px-4">
+        <p className="text-base sm:text-lg md:text-xl text-white mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed [text-shadow:0_0_18px_rgba(0,0,0,0.6),0_0_8px_rgba(0,0,0,0.5)] px-4">
           Join me on a journey through nature-inspired stories, personal
           adventures, and articles about the magical connections between life
           and the natural world.

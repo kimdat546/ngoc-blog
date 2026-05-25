@@ -4,12 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { getMenuCategories, type Category } from '@/lib/categoryData';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [menuCategories, setMenuCategories] = useState<Category[]>([]);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    getMenuCategories().then(setMenuCategories);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,10 +54,19 @@ export default function Header() {
     }
   };
 
+  const isHome = pathname === '/';
+  const isTransparent = isHome && !isScrolled;
+  const textClass = isTransparent
+    ? 'text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.8)]'
+    : 'text-forest';
+  const hoverClass = isTransparent ? 'hover:text-sage' : 'hover:text-moss';
+
   return (
     <header
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/90 backdrop-blur-sm shadow-lg' : 'bg-transparent'
+        isTransparent
+          ? 'bg-gradient-to-b from-black/50 via-black/25 to-transparent'
+          : 'bg-white/90 backdrop-blur-sm shadow-lg'
       }`}
     >
       <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -61,33 +76,42 @@ export default function Header() {
             alt="Forest Blog Logo"
             width={40}
             height={40}
-            className="w-10 h-10"
+            className={`w-10 h-10 ${isTransparent ? 'drop-shadow-md' : ''}`}
           />
-          <span className="text-xl font-bold text-forest">My Forest Blog</span>
+          <span className={`text-xl font-bold ${textClass}`}>My Forest Blog</span>
         </Link>
 
-        <div className="hidden md:flex items-center space-x-8">
+        <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
           <button
             onClick={() => scrollToSection('hero')}
-            className="text-forest hover:text-moss transition-colors cursor-pointer"
+            className={`${textClass} ${hoverClass} transition-colors cursor-pointer`}
           >
             Home
           </button>
           <button
             onClick={() => scrollToSection('about')}
-            className="text-forest hover:text-moss transition-colors cursor-pointer"
+            className={`${textClass} ${hoverClass} transition-colors cursor-pointer`}
           >
             About
           </button>
+          {menuCategories.map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/category/${cat.slug}`}
+              className={`${textClass} ${hoverClass} transition-colors cursor-pointer whitespace-nowrap`}
+            >
+              {cat.name}
+            </Link>
+          ))}
           <button
             onClick={() => scrollToSection('blog')}
-            className="text-forest hover:text-moss transition-colors cursor-pointer"
+            className={`${textClass} ${hoverClass} transition-colors cursor-pointer`}
           >
             Blog
           </button>
           <button
             onClick={() => scrollToSection('contact')}
-            className="text-forest hover:text-moss transition-colors cursor-pointer"
+            className={`${textClass} ${hoverClass} transition-colors cursor-pointer`}
           >
             Contact
           </button>
@@ -96,7 +120,7 @@ export default function Header() {
         {/* Mobile menu button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`md:hidden ${isScrolled ? 'text-forest' : 'text-white'}`}
+          className={`md:hidden ${textClass}`}
           aria-label="Toggle menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,6 +153,16 @@ export default function Header() {
             >
               About
             </button>
+            {menuCategories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-forest hover:text-moss transition-colors text-left"
+              >
+                {cat.name}
+              </Link>
+            ))}
             <button
               onClick={() => scrollToSection('blog')}
               className="text-forest hover:text-moss transition-colors text-left"

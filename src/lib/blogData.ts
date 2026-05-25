@@ -92,6 +92,21 @@ export const getFeaturedPosts = async (): Promise<BlogPost[]> => {
   }
 };
 
+export const getPostsByCategoryIds = async (categoryIds: string[]): Promise<BlogPost[]> => {
+  if (categoryIds.length === 0) return [];
+  try {
+    const response = await client.getEntries({
+      content_type: 'blogPost',
+      'fields.category.sys.id[in]': categoryIds.join(','),
+      order: ['-fields.publishDate'] as any,
+    } as any);
+    return response.items.map(transformContentfulPost);
+  } catch (error) {
+    console.error('Error fetching posts by category ids:', error);
+    return [];
+  }
+};
+
 export const getPostsByCategory = async (categorySlug: string): Promise<BlogPost[]> => {
   try {
     const response = await client.getEntries({
@@ -104,6 +119,21 @@ export const getPostsByCategory = async (categorySlug: string): Promise<BlogPost
   } catch (error) {
     console.error('Error fetching posts by category from Contentful:', error);
     return [];
+  }
+};
+
+export const getPostBySlug = async (slug: string): Promise<BlogPost | null> => {
+  try {
+    const response = await client.getEntries({
+      content_type: 'blogPost',
+      'fields.slug': slug,
+      limit: 1,
+    } as any);
+    if (response.items.length === 0) return null;
+    return transformContentfulPost(response.items[0]);
+  } catch (error) {
+    console.error('Error fetching post by slug from Contentful:', error);
+    return null;
   }
 };
 

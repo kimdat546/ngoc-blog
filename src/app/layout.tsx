@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ngocmyforestblog.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "My Personal Forest Blog - Stories, Articles & Adventures",
   description: "Personal blog sharing my stories, articles, and adventures inspired by nature and magical experiences",
   keywords: "personal blog, stories, articles, nature writing, forest tales, adventures",

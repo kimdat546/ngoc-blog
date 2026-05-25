@@ -1,0 +1,144 @@
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
+import { supabaseAdmin } from "@/lib/supabase";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_MAX = 80;
+const EMAIL_MAX = 254;
+const CONTENT_MAX = 2000;
+
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const postSlug = url.searchParams.get("post_slug");
+  if (!postSlug) {
+    return NextResponse.json({ error: "Missing post_slug" }, { status: 400 });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("comments")
+    .select("id, name, email, content, created_at")
+    .eq("post_slug", postSlug)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error("Supabase select error:", error);
+    return NextResponse.json({ error: "Failed to load comments" }, { status: 500 });
+  }
+
+  return NextResponse.json({ comments: data ?? [] });
+}
+
+export async function POST(request: Request) {
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { name, email, content, postSlug, postId, postTitle, website } = body ?? {};
+
+  // Honeypot
+  if (website) {
+    return NextResponse.json({ ok: true });
+  }
+
+  if (typeof postSlug !== "string" || !postSlug) {
+    return NextResponse.json({ error: "Missing post" }, { status: 400 });
+  }
+  if (typeof content !== "string" || !content.trim()) {
+    return NextResponse.json({ error: "Nội dung không được để trống" }, { status: 400 });
+  }
+  const trimmedContent = content.trim();
+  if (trimmedContent.length > CONTENT_MAX) {
+    return NextResponse.json(
+      { error: `Nội dung quá dài (tối đa ${CONTENT_MAX} ký tự)` },
+      { status: 400 }
+    );
+  }
+
+  let trimmedName: string | null = null;
+  if (typeof name === "string" && name.trim()) {
+    trimmedName = name.trim().slice(0, NAME_MAX);
+  }
+
+  let trimmedEmail: string | null = null;
+  if (typeof email === "string" && email.trim()) {
+    const v = email.trim();
+    if (v.length > EMAIL_MAX || !EMAIL_RE.test(v)) {
+      return NextResponse.json({ error: "Email không hợp lệ" }, { status: 400 });
+    }
+    trimmedEmail = v;
+  }
+
+  const { data: inserted, error } = await supabaseAdmin
+    .from("comments")
+    .insert({
+      post_slug: postSlug,
+      post_id: typeof postId === "string" ? postId : null,
+      name: trimmedName,
+      email: trimmedEmail,
+      content: trimmedContent,
+    })
+    .select("id, name, email, content, created_at")
+    .single();
+
+  if (error) {
+    console.error("Supabase insert error:", error);
+    return NextResponse.json({ error: "Không thể lưu bình luận" }, { status: 500 });
+  }
+
+  // Notify the author (best-effort, do not block the response on failure)
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = process.env.CONTACT_EMAIL_TO;
+  if (apiKey && to) {
+    try {
+      const resend = new Resend(apiKey);
+      const isAnon = !trimmedName && !trimmedEmail;
+      const title = typeof postTitle === "string" && postTitle ? postTitle : postSlug;
+      const subject = isAnon
+        ? `[Forest Blog] Bình luận ẩn danh mới trên "${title}"`
+        : `[Forest Blog] ${trimmedName || trimmedEmail} bình luận trên "${title}"`;
+
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || "https://ngocmyforestblog.vercel.app";
+      const postUrl = `${siteUrl}/post/${postSlug}`;
+
+      const lines: string[] = [];
+      lines.push(
+        `<p><strong>Bài viết:</strong> <a href="${escapeHtml(postUrl)}">${escapeHtml(title)}</a></p>`
+      );
+      if (isAnon) {
+        lines.push(`<p><strong>Người gửi:</strong> Ẩn danh</p>`);
+      } else {
+        if (trimmedName) lines.push(`<p><strong>Tên:</strong> ${escapeHtml(trimmedName)}</p>`);
+        if (trimmedEmail)
+          lines.push(`<p><strong>Email:</strong> ${escapeHtml(trimmedEmail)}</p>`);
+      }
+      lines.push(`<hr />`);
+      lines.push(`<p style="white-space: pre-wrap">${escapeHtml(trimmedContent)}</p>`);
+
+      await resend.emails.send({
+        from: "My Forest Blog <onboarding@resend.dev>",
+        to: [to],
+        replyTo: trimmedEmail || undefined,
+        subject,
+        html: lines.join("\n"),
+      });
+    } catch (err) {
+      console.error("Failed to send comment notification:", err);
+    }
+  }
+
+  return NextResponse.json({ comment: inserted });
+}

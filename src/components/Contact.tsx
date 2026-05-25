@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { BsRocketTakeoff } from 'react-icons/bs';
 import { GiClockwork } from 'react-icons/gi';
 import { HiOutlineLocationMarker } from 'react-icons/hi';
@@ -11,6 +11,7 @@ interface FormData {
   email: string;
   subject: string;
   message: string;
+  website: string; // honeypot
 }
 
 export default function Contact() {
@@ -18,10 +19,24 @@ export default function Contact() {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
+    website: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [orbs, setOrbs] = useState<Array<{ left: string; top: string; animationDelay: string; animationDuration: string }>>([]);
+
+  useEffect(() => {
+    setOrbs(
+      Array.from({ length: 15 }, () => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        animationDelay: `${Math.random() * 6}s`,
+        animationDuration: `${4 + Math.random() * 4}s`,
+      }))
+    );
+  }, []);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -33,15 +48,30 @@ export default function Contact() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitMessage('');
+    setSubmitError('');
 
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitMessage('Thank you for your message! I\'ll get back to you soon with a response.');
-      setFormData({ name: '', email: '', subject: '', message: '' });
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to send message');
+      }
+
+      setSubmitMessage("Thank you for your message! I'll get back to you soon with a response.");
+      setFormData({ name: '', email: '', subject: '', message: '', website: '' });
       setTimeout(() => setSubmitMessage(''), 5000);
-    }, 2000);
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Something went wrong. Please try again.');
+      setTimeout(() => setSubmitError(''), 6000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -51,16 +81,11 @@ export default function Contact() {
     >
       {/* Floating spirits background */}
       <div className="absolute inset-0">
-        {Array.from({ length: 15 }).map((_, i) => (
+        {orbs.map((orb, i) => (
           <div
             key={i}
             className="spirit-orb absolute opacity-30 animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 6}s`,
-              animationDuration: `${4 + Math.random() * 4}s`,
-            }}
+            style={orb}
           />
         ))}
       </div>
@@ -132,6 +157,20 @@ export default function Contact() {
 
             {/* Contact Form */}
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 mt-8 lg:mt-0">
+              {/* Honeypot: hidden from real users, bots will fill it */}
+              <div className="hidden" aria-hidden="true">
+                <label>
+                  Website
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                  />
+                </label>
+              </div>
               <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2 opacity-90">
@@ -216,6 +255,12 @@ export default function Contact() {
               {submitMessage && (
                 <div className="text-center text-sage font-medium text-sm sm:text-base">
                   {submitMessage}
+                </div>
+              )}
+
+              {submitError && (
+                <div className="text-center text-red-300 font-medium text-sm sm:text-base">
+                  {submitError}
                 </div>
               )}
             </form>

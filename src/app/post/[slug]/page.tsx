@@ -1,88 +1,89 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { getBlogPosts, getPostById, BlogPost } from "@/lib/blogData";
+import ScrollAutoplayVideo from "@/components/ScrollAutoplayVideo";
+import PostDisclaimer from "@/components/PostDisclaimer";
+import YouTubeEmbed, { parseYouTubeUrl } from "@/components/YouTubeEmbed";
+import CommentSection from "@/components/CommentSection";
+import {
+  getBlogPosts,
+  getPostById,
+  getPostBySlug,
+} from "@/lib/blogData";
 import { BsCalendar2Heart } from "react-icons/bs";
 import { TbClockHeart } from "react-icons/tb";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
 import { BLOCKS, INLINES, Block, Inline } from "@contentful/rich-text-types";
 import type { ReactNode } from "react";
 
-export default function PostPage() {
-  const params = useParams();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+// Contentful sys.id: 22-char base62 (alphanumeric, no hyphens). Slugs are kebab-case with hyphens.
+const CONTENTFUL_ID_RE = /^[A-Za-z0-9]{22}$/;
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      setLoading(true);
-      const postId = params.id as string;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
 
-      if (postId) {
-        const foundPost = await getPostById(postId);
-        setPost(foundPost);
-
-        if (foundPost) {
-          const allPosts = await getBlogPosts();
-          const related = allPosts
-            .filter(
-              (p) => p.id !== foundPost.id && p.category === foundPost.category
-            )
-            .slice(0, 3);
-          setRelatedPosts(related);
-        }
-      }
-      setLoading(false);
-    };
-    fetchPost();
-  }, [params.id]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-warm-white">
-        <Header />
-        <article className="container mx-auto px-6 py-12 max-w-4xl pt-24 animate-pulse">
-          <div className="mb-8">
-            <div className="h-8 bg-sage/20 rounded w-32 mb-6"></div>
-            <div className="h-4 bg-sage/20 rounded w-24 mb-6"></div>
-            <div className="h-12 bg-sage/20 rounded w-3/4 mb-6"></div>
-            <div className="h-4 bg-sage/20 rounded w-48 mb-8"></div>
-          </div>
-          <div className="aspect-video bg-sage/20 rounded-2xl mb-8"></div>
-          <div className="space-y-4">
-            <div className="h-4 bg-sage/20 rounded"></div>
-            <div className="h-4 bg-sage/20 rounded"></div>
-            <div className="h-4 bg-sage/20 rounded w-5/6"></div>
-          </div>
-        </article>
-        <Footer />
-      </div>
-    );
+  if (CONTENTFUL_ID_RE.test(slug)) {
+    return {};
   }
+
+  const post = await getPostBySlug(slug);
+  if (!post) return {};
+
+  const description = post.excerpt.slice(0, 200).trim();
+  const url = `/post/${post.slug}`;
+
+  return {
+    title: post.title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title: post.title,
+      description,
+      images: post.image ? [post.image] : undefined,
+      publishedTime: post.date,
+      tags: post.category ? [post.category] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description,
+      images: post.image ? [post.image] : undefined,
+    },
+  };
+}
+
+export default async function PostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  if (CONTENTFUL_ID_RE.test(slug)) {
+    const legacyPost = await getPostById(slug);
+    if (legacyPost?.slug) {
+      permanentRedirect(`/post/${legacyPost.slug}`);
+    }
+  }
+
+  const post = await getPostBySlug(slug);
 
   if (!post) {
-    return (
-      <div className="min-h-screen bg-warm-white">
-        <Header />
-        <div className="flex items-center justify-center pt-24 min-h-screen">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-forest mb-4">
-              Post not found
-            </h1>
-            <Link href="/posts" className="btn-forest">
-              View All Posts
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    notFound();
   }
+
+  const allPosts = await getBlogPosts();
+  const relatedPosts = allPosts
+    .filter((p) => p.id !== post.id && p.category === post.category)
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-warm-white">
@@ -147,6 +148,31 @@ export default function PostPage() {
                     </div>
                   </blockquote>
                 ),
+                [INLINES.HYPERLINK]: (
+                  node: Block | Inline,
+                  children: ReactNode
+                ) => {
+                  const uri = (node as Inline).data.uri as string;
+                  const linkText = (node as Inline).content
+                    .map((c: any) => (typeof c?.value === "string" ? c.value : ""))
+                    .join("")
+                    .trim();
+                  const isBareUrl = linkText === "" || linkText === uri;
+                  const yt = isBareUrl ? parseYouTubeUrl(uri) : null;
+                  if (yt) {
+                    return <YouTubeEmbed videoId={yt.videoId} start={yt.start} />;
+                  }
+                  return (
+                    <a
+                      href={uri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-moss underline underline-offset-2 cursor-pointer hover:text-forest transition-colors break-words"
+                    >
+                      {children}
+                    </a>
+                  );
+                },
               },
             })}
           </div>
@@ -198,13 +224,39 @@ export default function PostPage() {
                 ) => <li className="mb-2">{children}</li>,
                 [BLOCKS.EMBEDDED_ASSET]: (node: any) => {
                   const { file, title, description } = node.data.target.fields;
-                  const imageUrl = file?.url ? `https:${file.url}` : "";
+                  const assetUrl = file?.url ? `https:${file.url}` : "";
+                  const contentType: string = file?.contentType || "";
+                  const caption = title || description || "";
+
+                  if (contentType.startsWith("video/")) {
+                    return (
+                      <ScrollAutoplayVideo
+                        src={assetUrl}
+                        type={contentType}
+                        caption={caption || undefined}
+                      />
+                    );
+                  }
+
+                  if (contentType.startsWith("audio/")) {
+                    return (
+                      <div className="my-8 flex flex-col items-center">
+                        <audio controls src={assetUrl} className="w-full max-w-2xl" />
+                        {caption && (
+                          <p className="text-sm text-sage text-center mt-2 italic">
+                            {caption}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
+
                   const width = file?.details?.image?.width;
 
                   return (
                     <div className="my-8 flex flex-col items-center">
                       <img
-                        src={imageUrl}
+                        src={assetUrl}
                         alt={title || description || ""}
                         className="rounded-lg"
                         style={{
@@ -225,7 +277,6 @@ export default function PostPage() {
                   const contentType = node.data.target.sys.contentType?.sys?.id;
                   const fields = node.data.target.fields;
 
-                  // Handle different content types
                   if (contentType === "blogPost") {
                     return (
                       <div className="my-8 p-6 bg-cream rounded-lg border-l-4 border-moss">
@@ -237,7 +288,7 @@ export default function PostPage() {
                             ""}
                         </p>
                         <Link
-                          href={`/post/${node.data.target.sys.id}`}
+                          href={`/post/${fields.slug || node.data.target.sys.id}`}
                           className="text-moss hover:text-forest font-medium"
                         >
                           Đọc tiếp nè →
@@ -246,7 +297,6 @@ export default function PostPage() {
                     );
                   }
 
-                  // Default rendering for other content types
                   return (
                     <div className="my-8 p-6 bg-cream rounded-lg">
                       <p className="text-sm text-sage italic">
@@ -263,15 +313,39 @@ export default function PostPage() {
                     </div>
                   );
                 },
+                [INLINES.HYPERLINK]: (
+                  node: Block | Inline,
+                  children: ReactNode
+                ) => {
+                  const uri = (node as Inline).data.uri as string;
+                  const linkText = (node as Inline).content
+                    .map((c: any) => (typeof c?.value === "string" ? c.value : ""))
+                    .join("")
+                    .trim();
+                  const isBareUrl = linkText === "" || linkText === uri;
+                  const yt = isBareUrl ? parseYouTubeUrl(uri) : null;
+                  if (yt) {
+                    return <YouTubeEmbed videoId={yt.videoId} start={yt.start} />;
+                  }
+                  return (
+                    <a
+                      href={uri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-moss underline underline-offset-2 cursor-pointer hover:text-forest transition-colors break-words"
+                    >
+                      {children}
+                    </a>
+                  );
+                },
                 [INLINES.EMBEDDED_ENTRY]: (node: any) => {
                   const contentType = node.data.target.sys.contentType?.sys?.id;
                   const fields = node.data.target.fields;
 
-                  // Handle inline embedded entries
                   if (contentType === "blogPost" && fields.title) {
                     return (
                       <Link
-                        href={`/post/${node.data.target.sys.id}`}
+                        href={`/post/${fields.slug || node.data.target.sys.id}`}
                         className="inline-flex items-center gap-1 text-moss hover:text-forest font-medium transition-colors border-b-2 border-moss/30 hover:border-moss"
                       >
                         <span>🍃</span>
@@ -280,7 +354,6 @@ export default function PostPage() {
                     );
                   }
 
-                  // Default inline rendering
                   return (
                     <span className="inline-flex items-center gap-1 text-moss font-medium italic">
                       <span>✨</span>
@@ -293,6 +366,14 @@ export default function PostPage() {
           </div>
         </div>
 
+        <PostDisclaimer />
+
+        <CommentSection
+          postSlug={post.slug}
+          postId={post.id}
+          postTitle={post.title}
+        />
+
         {relatedPosts.length > 0 && (
           <div className="mt-16 pt-8 border-t border-sage/20">
             <h3 className="text-2xl font-bold text-forest mb-8">
@@ -302,7 +383,7 @@ export default function PostPage() {
               {relatedPosts.map((relatedPost) => (
                 <Link
                   key={relatedPost.id}
-                  href={`/post/${relatedPost.id}`}
+                  href={`/post/${relatedPost.slug}`}
                   className="floating-card overflow-hidden block"
                 >
                   <div className="aspect-video bg-sage/20 relative overflow-hidden">
