@@ -45,3 +45,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 config.bat
+
+# cloudflare worker
+workers/*/node_modules
+.wrangler/
+.dev.vars
+
+.env*
+!.env.example

@@ -1,0 +1,17 @@
+{
+  "name": "ngoc-blog-comments",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ngoc-blog-comments",
+      "database_id": "3fd9ad77-caea-4ab0-9546-7a8c212dfc23",
+      "migrations_dir": "migrations"
+    }
+  ]
+  // Secrets (set with `npx wrangler secret put <NAME>`):
+  //   API_SECRET        shared with the Next app (COMMENTS_API_SECRET)
+  //   TURNSTILE_SECRET  secret key of the "ngoc-blog-comments" Turnstile widget
+}

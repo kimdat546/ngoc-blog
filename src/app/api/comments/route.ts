@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { supabaseAdmin } from "@/lib/supabase";
+import {
+  CommentsApiError,
+  createComment,
+  hashIp,
+  listComments,
+} from "@/lib/comments";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_MAX = 80;
@@ -23,19 +28,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing post_slug" }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("comments")
-    .select("id, name, email, content, created_at")
-    .eq("post_slug", postSlug)
-    .order("created_at", { ascending: false })
-    .limit(200);
-
-  if (error) {
-    console.error("Supabase select error:", error);
+  try {
+    const comments = await listComments(postSlug);
+    return NextResponse.json({ comments });
+  } catch (error) {
+    console.error("Comments list error:", error);
     return NextResponse.json({ error: "Failed to load comments" }, { status: 500 });
   }
-
-  return NextResponse.json({ comments: data ?? [] });
 }
 
 export async function POST(request: Request) {
@@ -46,7 +45,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { name, email, content, postSlug, postId, postTitle, website } = body ?? {};
+  const { name, email, content, postSlug, postId, postTitle, website, turnstileToken } =
+    body ?? {};
 
   // Honeypot
   if (website) {
@@ -81,20 +81,35 @@ export async function POST(request: Request) {
     trimmedEmail = v;
   }
 
-  const { data: inserted, error } = await supabaseAdmin
-    .from("comments")
-    .insert({
+  if (typeof turnstileToken !== "string" || !turnstileToken) {
+    return NextResponse.json(
+      { error: "Vui lòng hoàn tất bước xác minh trước khi gửi" },
+      { status: 400 }
+    );
+  }
+
+  const remoteIp = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || null;
+
+  let inserted;
+  try {
+    inserted = await createComment({
       post_slug: postSlug,
       post_id: typeof postId === "string" ? postId : null,
       name: trimmedName,
       email: trimmedEmail,
       content: trimmedContent,
-    })
-    .select("id, name, email, content, created_at")
-    .single();
-
-  if (error) {
-    console.error("Supabase insert error:", error);
+      ip_hash: remoteIp ? await hashIp(remoteIp) : null,
+      turnstile_token: turnstileToken,
+      remote_ip: remoteIp,
+    });
+  } catch (error) {
+    if (error instanceof CommentsApiError && error.code === "turnstile_failed") {
+      return NextResponse.json(
+        { error: "Xác minh không thành công, vui lòng thử lại" },
+        { status: 400 }
+      );
+    }
+    console.error("Comments insert error:", error);
     return NextResponse.json({ error: "Không thể lưu bình luận" }, { status: 500 });
   }
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useRef, useState, FormEvent } from 'react';
+import Turnstile, { type TurnstileHandle } from './Turnstile';
 
 interface Props {
   postSlug: string;
@@ -14,6 +15,8 @@ export default function CommentForm({ postSlug, postId, postTitle, onPosted }: P
   const [email, setEmail] = useState('');
   const [content, setContent] = useState('');
   const [website, setWebsite] = useState(''); // honeypot
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileHandle>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -36,6 +39,7 @@ export default function CommentForm({ postSlug, postId, postTitle, onPosted }: P
           postId,
           postTitle,
           website,
+          turnstileToken,
         }),
       });
       if (!res.ok) {
@@ -52,6 +56,8 @@ export default function CommentForm({ postSlug, postId, postTitle, onPosted }: P
       setError(err?.message || 'Có lỗi xảy ra, vui lòng thử lại');
       setTimeout(() => setError(''), 5000);
     } finally {
+      // Turnstile tokens are single-use, so get a fresh one for the next submit.
+      turnstileRef.current?.reset();
       setSubmitting(false);
     }
   }
@@ -100,11 +106,13 @@ export default function CommentForm({ postSlug, postId, postTitle, onPosted }: P
         className="w-full px-4 py-3 rounded-lg bg-white border border-sage/30 text-forest placeholder-sage/70 focus:outline-none focus:ring-2 focus:ring-moss/40 transition-all resize-none"
       />
 
+      <Turnstile ref={turnstileRef} onToken={setTurnstileToken} />
+
       <div className="flex items-center justify-between gap-4">
         <span className="text-xs text-sage">{content.length}/2000</span>
         <button
           type="submit"
-          disabled={submitting || !content.trim()}
+          disabled={submitting || !content.trim() || !turnstileToken}
           className="btn-forest disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? 'Đang gửi...' : 'Gửi bình luận'}

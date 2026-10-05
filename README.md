@@ -40,6 +40,9 @@ This blog is a creative space for a passionate nature writer and storyteller who
 | **TypeScript** | Type-safe development |
 | **Tailwind CSS v4** | Styling and design system |
 | **Contentful** | Headless CMS for blog content |
+| **Cloudflare Workers + D1** | Comments API and storage |
+| **Cloudflare Turnstile** | Spam protection for comments |
+| **Resend** | Contact form and comment notification emails |
 | **Turbopack** | Fast development builds |
 | **React Icons** | Icon library |
 | **Lucide Icons** | Additional icon set (via CDN) |
@@ -53,7 +56,9 @@ ngoc-blog/
 │   │   ├── page.tsx            # Homepage
 │   │   ├── layout.tsx          # Root layout with metadata
 │   │   ├── globals.css         # Global styles & design tokens
-│   │   ├── post/[id]/          # Dynamic blog post pages
+│   │   ├── post/[slug]/        # Dynamic blog post pages
+│   │   ├── category/[slug]/    # Category pages
+│   │   ├── api/                # Contact + comments API routes
 │   │   └── posts/              # Blog posts listing page
 │   ├── components/             # Reusable React components
 │   │   ├── Header.tsx          # Navigation header
@@ -66,6 +71,7 @@ ngoc-blog/
 │       ├── blogData.ts         # Blog data fetching functions
 │       ├── categoryData.ts     # Category definitions
 │       └── contentful.ts       # Contentful client setup
+├── workers/comments/           # Cloudflare Worker + D1 migrations for comments
 ├── public/                     # Static assets
 │   └── images/                 # Image assets
 ├── .env.example                # Environment variables template
@@ -99,12 +105,10 @@ ngoc-blog/
 
 3. **Set up environment variables**
 
-   Copy the example environment file and configure your Contentful credentials:
+   Copy the example environment file and fill in the values (Contentful, Resend, comments Worker, Turnstile):
    ```bash
-   cp .env.example .env
+   cp .env.example .env.local
    ```
-
-   Update `.env` with your Contentful Space ID and Access Token.
 
 4. **Run the development server**
    ```bash
@@ -122,6 +126,17 @@ ngoc-blog/
 | `npm run dev` | Start development server with Turbopack |
 | `npm run build` | Build for production |
 | `npm start` | Start production server |
+
+## 💬 Comments Worker
+
+Comments are stored in Cloudflare D1 behind a small Worker in `workers/comments/`. From that folder:
+
+```bash
+npx wrangler d1 migrations apply ngoc-blog-comments --remote
+npx wrangler secret put API_SECRET        # same value as COMMENTS_API_SECRET
+npx wrangler secret put TURNSTILE_SECRET  # Turnstile widget secret key
+npx wrangler deploy
+```
 
 ## 🎨 Design System
 
