@@ -2,6 +2,7 @@ import client from './contentful';
 import { Entry, EntrySkeletonType } from 'contentful';
 import { Document } from '@contentful/rich-text-types';
 import { documentToPlainTextString } from '@contentful/rich-text-plain-text-renderer';
+import { stripColorSyntax } from './textColor';
 
 export interface BlogPost {
   id: string;
@@ -12,6 +13,7 @@ export interface BlogPost {
   content: string;
   contentRichText: Document;
   category: string;
+  categorySlug: string;
   date: string;
   readTime: string;
   featured: boolean;
@@ -53,11 +55,12 @@ function transformContentfulPost(entry: any): BlogPost {
     id: entry.sys.id,
     title: fields.title,
     slug: fields.slug,
-    excerpt: documentToPlainTextString(fields.excerpt),
+    excerpt: stripColorSyntax(documentToPlainTextString(fields.excerpt)),
     excerptRichText: fields.excerpt,
-    content: documentToPlainTextString(fields.content),
+    content: stripColorSyntax(documentToPlainTextString(fields.content)),
     contentRichText: fields.content,
     category: categoryName,
+    categorySlug: fields.category?.fields?.slug || '',
     date: fields.publishDate,
     readTime: fields.readTime,
     featured: false, // You can add a "featured" boolean field if needed
@@ -128,6 +131,7 @@ export const getPostBySlug = async (slug: string): Promise<BlogPost | null> => {
       content_type: 'blogPost',
       'fields.slug': slug,
       limit: 1,
+      include: 3, // resolve assets inside embedded gallery entries
     } as any);
     if (response.items.length === 0) return null;
     return transformContentfulPost(response.items[0]);
@@ -139,7 +143,7 @@ export const getPostBySlug = async (slug: string): Promise<BlogPost | null> => {
 
 export const getPostById = async (id: string): Promise<BlogPost | null> => {
   try {
-    const entry = await client.getEntry(id);
+    const entry = await client.getEntry(id, { include: 3 });
     return transformContentfulPost(entry);
   } catch (error) {
     console.error('Error fetching post by ID from Contentful:', error);

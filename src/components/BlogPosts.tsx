@@ -58,7 +58,7 @@ export default function BlogPosts() {
                 className={`px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-300 ${
                   selectedCategory === "All"
                     ? "bg-moss text-white shadow-lg"
-                    : "bg-white text-sage hover:bg-sage"
+                    : "bg-white text-sage hover:bg-sage hover:text-white"
                 }`}
               >
                 All
@@ -70,7 +70,7 @@ export default function BlogPosts() {
                   className={`px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-300 ${
                     selectedCategory === category.name
                       ? "bg-moss text-white shadow-lg"
-                      : "bg-white text-sage hover:bg-sage"
+                      : "bg-white text-sage hover:bg-sage hover:text-white"
                   }`}
                 >
                   {category.name}

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
+  getCategoryById,
   getCategoryBySlug,
   getChildCategories,
 } from "@/lib/categoryData";
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const category = await getCategoryBySlug(slug);
   if (!category) return {};
   const title = `${category.name} - My Forest Blog`;
-  const description = `Bài viết về ${category.name}`;
+  const description = category.description || `Bài viết về ${category.name}`;
   return {
     title,
     description,
@@ -38,7 +39,10 @@ export default async function CategoryPage({
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const children = await getChildCategories(category.id);
+  const [children, parent] = await Promise.all([
+    getChildCategories(category.id),
+    category.parentId ? getCategoryById(category.parentId) : null,
+  ]);
   const allIds = [category.id, ...children.map((c) => c.id)];
   const posts = await getPostsByCategoryIds(allIds);
 
@@ -49,10 +53,10 @@ export default async function CategoryPage({
       <section className="container mx-auto px-6 py-12 max-w-6xl pt-24">
         <div className="text-center mb-12">
           <Link
-            href="/posts"
+            href={parent ? `/category/${parent.slug}` : "/posts"}
             className="inline-flex items-center text-moss hover:text-forest mb-6"
           >
-            <span className="text-sm mr-2">←</span> All Posts
+            <span className="text-sm mr-2">←</span> {parent ? parent.name : "All Posts"}
           </Link>
           <h1 className="text-4xl md:text-5xl font-bold text-forest mb-4">
             {category.name}
@@ -63,6 +67,11 @@ export default async function CategoryPage({
               <span> · bao gồm {children.length} chuyên mục con</span>
             )}
           </p>
+          {category.description && (
+            <p className="mt-4 max-w-2xl mx-auto text-lg text-forest/80 leading-relaxed whitespace-pre-line">
+              {category.description}
+            </p>
+          )}
           {children.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
               {children.map((c) => (

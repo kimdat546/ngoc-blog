@@ -66,13 +66,34 @@ CommentForm (Turnstile token) → /api/comments (Next, validates + hashes IP) �
 - Turnstile tokens are single-use — `CommentForm` resets the widget after every submit. Widget domains: `ngocmyforestblog.vercel.app`, `localhost`. A new production domain must be added to the widget in the Cloudflare dashboard.
 - After a comment is saved, the route emails the author via Resend (best-effort).
 
+### Image galleries
+
+`src/lib/gallery.ts` + `src/components/gallery/` (Swiper, react-photo-album, yet-another-react-lightbox):
+
+- **Auto-grouping:** `groupConsecutiveImages()` runs on `contentRichText` before rendering. Runs of 2+ consecutive top-level image assets (empty paragraphs between them ignored) become a synthetic `imageGallery` embedded entry: 2–5 images → `grid`, 6+ → `carousel`. Single images render as before.
+- **Gallery entries:** Contentful content type `imageGallery` (fields: `title` short text, `images` media many, `layout` one of `carousel` / `grid` / `slideshow`) can be embedded in a post's rich text. `getPostBySlug` / `getPostById` use `include: 3` so the gallery's assets are resolved.
+- All layouts open a fullscreen lightbox (zoom, counter, captions = asset title/description). Image URLs go through the Contentful Images API (`contentfulImageUrl`, webp, sized per use; GIFs untouched).
+
+### Post body rendering & content blocks
+
+`src/components/PostContent.tsx` renders `contentRichText` (the excerpt is still rendered inline in the post page). It styles all built-in nodes/marks (H1–H6, tables, hr → `Divider`, code/strike/sup/sub, entry & asset hyperlinks) and these embedded entry types:
+
+- `imageGallery` — see "Image galleries".
+- `callout` — `title` (short text, optional), `body` (rich text), `variant`: `note` | `leaf` | `heart` | `important`.
+- `divider` — `variant`: `leaf` | `flower` | `sparkle` | `dots` | `line`.
+- `styledText` — `body` (rich text), `color`: `forest` | `moss` | `sage` | `brown` | `golden` | `rose`; `font`: `serif` | `handwriting` | `notebook` | `elegant` | `sans` (next/font, Vietnamese subsets, `src/components/blocks/fonts.ts`); `align`: `left` | `center` | `right`; `size`: `small` | `normal` | `large`.
+
+**Inline colour syntax** (`src/lib/textColor.tsx`, wired as `renderText` for post content + excerpt): `(chữ)[hồng]` text colour, `(chữ)[nền vàng]` highlight, `(chữ)[đỏ, nền vàng]` both, `(chữ)[#8a3ffc]` hex. Names are Vietnamese with unaccented/English aliases; unknown specs are left as literal text. `stripColorSyntax` removes the syntax from the plain-text `excerpt`/`content` (search, cards, meta). It only matches within one text node, so partially-bold phrases won't colour.
+
+Apart from that, Contentful rich text has no inline colour/font marks; per-passage styling only works through `styledText`. Unknown/missing option values fall back to defaults. Nested rich text in blocks reuses the same render options.
+
 ### Styling
 
 Tailwind CSS v4 via `@tailwindcss/postcss`. Custom utility classes live in `src/app/globals.css`:
 
 - `.btn-forest`, `.floating-card`, `.container`
 
-Color palette is forest/moss/sage/warm-white. Lucide icons are loaded via a CDN CSS import in `layout.tsx`; React Icons is also available as an npm dependency.
+Color palette (forest/moss/sage/cream/warm-white/soft-brown/golden) is declared in the `@theme` block of `globals.css`, so Tailwind generates the utilities and variants (`hover:bg-moss`, `bg-sage/20`, `text-forest/80`…). Don't hand-write color utilities like `.bg-moss {}` — Tailwind won't generate variants for them. The `:root` vars (`--moss-green` etc.) duplicate the same hex values for the hand-written component CSS; keep both in sync. Lucide icons are loaded via a CDN CSS import in `layout.tsx`; React Icons is also available as an npm dependency.
 
 ### Path aliases
 

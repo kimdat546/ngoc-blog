@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { getMenuCategories, type Category } from '@/lib/categoryData';
+import { FiChevronDown } from 'react-icons/fi';
+import { getMenuCategories, type MenuCategory } from '@/lib/categoryData';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [menuCategories, setMenuCategories] = useState<Category[]>([]);
+  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -59,7 +60,18 @@ export default function Header() {
   const textClass = isTransparent
     ? 'text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.8)]'
     : 'text-forest';
-  const hoverClass = isTransparent ? 'hover:text-sage' : 'hover:text-moss';
+  // Over the hero artwork, colour changes get lost, so hover underlines instead.
+  const hoverClass = isTransparent
+    ? 'hover:underline underline-offset-8 decoration-1 decoration-white/70'
+    : 'hover:text-moss';
+  // Dropdown: frosted dark glass over the hero, solid white panel elsewhere.
+  const dropdownPanelClass = isTransparent
+    ? 'bg-forest/60 backdrop-blur-md border border-white/15 shadow-xl'
+    : 'bg-white/95 backdrop-blur-sm border border-sage/20 shadow-lg';
+  const dropdownItemClass = isTransparent
+    ? 'text-white/90 hover:bg-white/10 hover:text-white'
+    : 'text-forest hover:bg-cream hover:text-moss';
+  const dropdownDividerClass = isTransparent ? 'bg-white/15' : 'bg-sage/20';
 
   return (
     <header
@@ -94,15 +106,49 @@ export default function Header() {
           >
             About
           </button>
-          {menuCategories.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className={`${textClass} ${hoverClass} transition-colors cursor-pointer whitespace-nowrap`}
-            >
-              {cat.name}
-            </Link>
-          ))}
+          {menuCategories.map((cat) =>
+            cat.children.length === 0 ? (
+              <Link
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                className={`${textClass} ${hoverClass} transition-colors cursor-pointer whitespace-nowrap`}
+              >
+                {cat.name}
+              </Link>
+            ) : (
+              <div key={cat.id} className="relative group">
+                <Link
+                  href={`/category/${cat.slug}`}
+                  aria-haspopup="true"
+                  className={`${textClass} ${hoverClass} transition-colors cursor-pointer whitespace-nowrap inline-flex items-center gap-1`}
+                >
+                  {cat.name}
+                  <FiChevronDown className="text-sm transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180" />
+                </Link>
+                {/* pt-3 bridges the gap so the menu doesn't close while moving the mouse down */}
+                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-3 invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 transition-all duration-200">
+                  <div className={`min-w-48 rounded-xl py-2 transition-colors ${dropdownPanelClass}`}>
+                    <Link
+                      href={`/category/${cat.slug}`}
+                      className={`block px-4 py-2 text-sm whitespace-nowrap transition-colors ${dropdownItemClass}`}
+                    >
+                      Tất cả bài viết
+                    </Link>
+                    <div className={`my-1 mx-4 h-px ${dropdownDividerClass}`} />
+                    {cat.children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={`/category/${child.slug}`}
+                        className={`block px-4 py-2 text-sm whitespace-nowrap transition-colors ${dropdownItemClass}`}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          )}
           <button
             onClick={() => scrollToSection('blog')}
             className={`${textClass} ${hoverClass} transition-colors cursor-pointer`}
@@ -154,14 +200,29 @@ export default function Header() {
               About
             </button>
             {menuCategories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-forest hover:text-moss transition-colors text-left"
-              >
-                {cat.name}
-              </Link>
+              <div key={cat.id} className="flex flex-col space-y-3">
+                <Link
+                  href={`/category/${cat.slug}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-forest hover:text-moss transition-colors text-left"
+                >
+                  {cat.name}
+                </Link>
+                {cat.children.length > 0 && (
+                  <div className="flex flex-col space-y-3 pl-4 border-l border-sage/30">
+                    {cat.children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={`/category/${child.slug}`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="text-sm text-forest/80 hover:text-moss transition-colors text-left"
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
             <button
               onClick={() => scrollToSection('blog')}

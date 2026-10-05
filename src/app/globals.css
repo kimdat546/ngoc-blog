@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Palette as Tailwind colors, so utilities and variants like hover:bg-moss,
+   bg-sage/20 or text-forest/80 are generated. Keep in sync with :root below. */
+@theme {
+  --color-forest: #2d5a3d;
+  --color-moss: #4a7c59;
+  --color-sage: #87a96b;
+  --color-cream: #f7f3e9;
+  --color-warm-white: #fdfcf8;
+  --color-soft-brown: #8b6f47;
+  --color-golden: #d4af37;
+}
+
 @layer theme {
   :root {
     --forest-green: #2d5a3d;
@@ -92,14 +104,6 @@
 }
 
 @layer utilities {
-  .text-forest { color: var(--forest-green); }
-  .text-moss { color: var(--moss-green); }
-  .text-sage { color: var(--sage-green); }
-  .bg-cream { background: var(--cream); }
-  .bg-forest { background: var(--forest-green); }
-  .bg-moss { background: var(--moss-green); }
-  .border-moss { border-color: var(--moss-green); }
-  .bg-warm-white { background: var(--warm-white); }
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
@@ -129,3 +133,55 @@
 .icon-sparkles::before { content: "✨"; }
 .icon-arrow-right::before { content: "→"; }
 .icon-chevron-down::before { content: "⌄"; }
+
+/* Image galleries (Swiper) in post content */
+.gallery-swiper {
+  --swiper-theme-color: var(--moss-green);
+  --swiper-navigation-size: 40px;
+  --swiper-navigation-sides-offset: 8px;
+  --swiper-pagination-bullet-inactive-color: var(--sage-green);
+  --swiper-pagination-bullet-inactive-opacity: 0.4;
+}
+
+.gallery-swiper.swiper {
+  padding-bottom: 2.5rem;
+}
+
+.gallery-swiper .swiper-button-prev,
+.gallery-swiper .swiper-button-next {
+  padding: 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--forest-green);
+  box-shadow: 0 4px 14px var(--shadow-soft);
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+}
+
+.gallery-swiper .swiper-button-prev:hover,
+.gallery-swiper .swiper-button-next:hover {
+  background: #fff;
+}
+
+.gallery-swiper.swiper .swiper-button-prev,
+.gallery-swiper.swiper .swiper-button-next {
+  margin-top: calc(-20px - 1.25rem);
+}
+
+.gallery-thumbs .swiper-slide {
+  opacity: 0.45;
+  transition: opacity 0.2s;
+}
+
+.gallery-thumbs .swiper-slide-thumb-active,
+.gallery-thumbs .swiper-slide:hover {
+  opacity: 1;
+}
+
+/* On phones, swiping is enough; arrows would cover the image */
+@media (max-width: 640px) {
+  .gallery-swiper .swiper-button-prev,
+  .gallery-swiper .swiper-button-next {
+    display: none;
+  }
+}

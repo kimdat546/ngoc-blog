@@ -20,6 +20,10 @@ export default function PostsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const selectedDescription = categories.find(
+    (c) => c.name === selectedCategory
+  )?.description;
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -29,10 +33,23 @@ export default function PostsPage() {
 
       const fetchedCategories = await getCategories();
       setCategories(fetchedCategories);
+
+      // Preselect the category from ?category=<slug> (e.g. a post's category badge).
+      const slug = new URLSearchParams(window.location.search).get("category");
+      const fromUrl = fetchedCategories.find((c) => c.slug === slug);
+      if (fromUrl) setSelectedCategory(fromUrl.name);
+
       setLoading(false);
     };
     fetchData();
   }, []);
+
+  const selectCategory = (category: Category | null) => {
+    setSelectedCategory(category ? category.name : "All");
+    // Keep the URL in sync so the filtered view can be shared or reloaded.
+    const url = category ? `/posts?category=${category.slug}` : "/posts";
+    window.history.replaceState(null, "", url);
+  };
 
   useEffect(() => {
     let filtered = posts;
@@ -87,11 +104,11 @@ export default function PostsPage() {
             {categories.length > 0 && (
               <div className="flex flex-wrap justify-center gap-4">
                 <button
-                  onClick={() => setSelectedCategory("All")}
+                  onClick={() => selectCategory(null)}
                   className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
                     selectedCategory === "All"
                       ? "bg-moss text-white shadow-lg"
-                      : "bg-white text-sage hover:bg-sage"
+                      : "bg-white text-sage hover:bg-sage hover:text-white"
                   }`}
                 >
                   All
@@ -99,17 +116,23 @@ export default function PostsPage() {
                 {categories.map((category) => (
                   <button
                     key={category.id}
-                    onClick={() => setSelectedCategory(category.name)}
+                    onClick={() => selectCategory(category)}
                     className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
                       selectedCategory === category.name
                         ? "bg-moss text-white shadow-lg"
-                        : "bg-white text-sage hover:bg-sage"
+                        : "bg-white text-sage hover:bg-sage hover:text-white"
                     }`}
                   >
                     {category.name}
                   </button>
                 ))}
               </div>
+            )}
+
+            {selectedDescription && (
+              <p className="mt-8 max-w-2xl mx-auto text-lg text-forest/80 leading-relaxed whitespace-pre-line">
+                {selectedDescription}
+              </p>
             )}
           </div>
 

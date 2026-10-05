@@ -4,6 +4,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  description?: string;
   parentId?: string;
   showInMenu?: boolean;
   menuOrder?: number;
@@ -15,6 +16,10 @@ function transformContentfulCategory(entry: any): Category {
     id: entry.sys.id,
     name: fields.name,
     slug: fields.slug,
+    description:
+      typeof fields.description === 'string' && fields.description.trim()
+        ? fields.description.trim()
+        : undefined,
     parentId: fields.parent?.sys?.id,
     showInMenu: fields.showInMenu === true,
     menuOrder: typeof fields.menuOrder === 'number' ? fields.menuOrder : undefined,
@@ -43,16 +48,27 @@ export const getCategoryById = async (id: string): Promise<Category | null> => {
   }
 };
 
-// Top-level categories (no parent) with showInMenu=true, sorted by menuOrder asc.
-export const getMenuCategories = async (): Promise<Category[]> => {
+export interface MenuCategory extends Category {
+  children: Category[];
+}
+
+const byMenuOrder = (a: Category, b: Category) => {
+  const ao = a.menuOrder ?? Number.MAX_SAFE_INTEGER;
+  const bo = b.menuOrder ?? Number.MAX_SAFE_INTEGER;
+  return ao - bo || a.name.localeCompare(b.name, 'vi');
+};
+
+// Top-level categories (no parent) with showInMenu=true, sorted by menuOrder asc,
+// each with its child categories (same ordering) for the header dropdown.
+export const getMenuCategories = async (): Promise<MenuCategory[]> => {
   const all = await getCategories();
   return all
     .filter((c) => !c.parentId && c.showInMenu)
-    .sort((a, b) => {
-      const ao = a.menuOrder ?? Number.MAX_SAFE_INTEGER;
-      const bo = b.menuOrder ?? Number.MAX_SAFE_INTEGER;
-      return ao - bo;
-    });
+    .sort(byMenuOrder)
+    .map((parent) => ({
+      ...parent,
+      children: all.filter((c) => c.parentId === parent.id).sort(byMenuOrder),
+    }));
 };
 
 export const getCategoryBySlug = async (slug: string): Promise<Category | null> => {
