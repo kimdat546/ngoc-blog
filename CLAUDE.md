@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Personal nature-themed blog ("My Forest Blog") built with Next.js 15 (App Router), React 19, TypeScript, and Tailwind CSS v4. Content is sourced from Contentful CMS; comments live in Cloudflare D1 behind a Worker. Deployed on Vercel at https://ngocmyforestblog.vercel.app/.
+Personal nature-themed blog ("My Forest Blog") built with Next.js 15 (App Router), React 19, TypeScript, and Tailwind CSS v4. Content is sourced from Contentful CMS; comments (Cloudflare D1) and notification emails (Cloudflare Email Routing) go through a Worker. Deployed on Vercel at https://ngocmyforestblog.vercel.app/.
 
 ## Development Commands
 
@@ -18,7 +18,7 @@ Comments Worker (run from `workers/comments/`, uses the globally available `npx 
 
 - `npx wrangler deploy` — deploy the Worker
 - `npx wrangler d1 migrations apply ngoc-blog-comments --remote` — apply SQL in `migrations/`
-- `npx wrangler secret put <NAME>` — set `API_SECRET` / `TURNSTILE_SECRET`
+- `npx wrangler secret put <NAME>` — set `API_SECRET` / `TURNSTILE_SECRET` / `NOTIFY_TO`
 - `npx wrangler types` — regenerate `worker-configuration.d.ts` after changing `wrangler.jsonc`
 
 ## Environment
@@ -26,8 +26,7 @@ Comments Worker (run from `workers/comments/`, uses the globally available `npx 
 Copy `.env.example` → `.env.local`. Variables (also needed in Vercel):
 
 - `NEXT_PUBLIC_CONTENTFUL_SPACE_ID`, `NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN` — read in `src/lib/contentful.ts`. Without them, all data fetches return empty arrays (errors are caught and logged, not thrown).
-- `RESEND_API_KEY`, `CONTACT_EMAIL_TO` — emails for the contact form and new-comment notifications.
-- `COMMENTS_API_URL`, `COMMENTS_API_SECRET` — server-only; where the comments Worker lives and the shared bearer secret (must equal the Worker's `API_SECRET`).
+- `COMMENTS_API_URL`, `COMMENTS_API_SECRET` — server-only; where the blog Worker lives and the shared bearer secret (must equal the Worker's `API_SECRET`). Used for both comments and notification emails.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — Cloudflare Turnstile widget on the comment form. If unset, the widget isn't rendered and comments can't be submitted.
 - `NEXT_PUBLIC_SITE_URL` (optional) — defaults to the Vercel URL; used for `metadataBase` and links in emails.
 
@@ -52,7 +51,7 @@ When rendering post bodies, prefer the `*RichText` fields with `@contentful/rich
 - `/posts` — full post listing with search (title, excerpt, content).
 - `/post/[slug]` — post detail, looked up with `getPostBySlug`. Legacy `/post/<contentful sys.id>` URLs (22-char base62) are 308-redirected to the slug URL. Has `generateMetadata` for SEO/OG and appends `PostDisclaimer` + `CommentSection`.
 - `/category/[slug]` — posts in the category and all its child categories.
-- `/api/contact` — POST, sends the contact form via Resend (honeypot field `website`).
+- `/api/contact` — POST, emails the contact form to the owner via the Worker's `/notify` (honeypot field `website`).
 - `/api/comments` — GET list / POST create; proxies to the comments Worker.
 
 ### Comments (Cloudflare Worker + D1 + Turnstile)
@@ -64,7 +63,11 @@ CommentForm (Turnstile token) → /api/comments (Next, validates + hashes IP) �
 - Worker code: `workers/comments/` (`src/index.ts`, `wrangler.jsonc`, `migrations/`). It is excluded from the root `tsconfig.json`; typecheck it with `npx -p typescript tsc -p workers/comments`.
 - Only the Next server calls the Worker (`src/lib/comments.ts`); the API secret never reaches the browser. The Worker returns `403 {error: "turnstile_failed"}` for bad tokens, which the route maps to a Vietnamese message.
 - Turnstile tokens are single-use — `CommentForm` resets the widget after every submit. Widget domains: `ngocmyforestblog.vercel.app`, `localhost`. A new production domain must be added to the widget in the Cloudflare dashboard.
-- After a comment is saved, the route emails the author via Resend (best-effort).
+- After a comment is saved, the route emails the author via the Worker's `/notify` (best-effort).
+
+### Notification emails (Cloudflare Email Routing)
+
+`sendNotification()` in `src/lib/comments.ts` → Worker `POST /notify` → `send_email` binding `EMAIL`. Sent from `blog@hypercoding.dev` (Email Routing is enabled on that zone) to the Worker secret `NOTIFY_TO`, which must be a **verified destination address** in the Cloudflare account (free on all plans). Callers can't choose the recipient; `replyTo` is set to the visitor's email so replies go to them. Don't touch the other Email Routing rules on `hypercoding.dev` — they belong to other projects.
 
 ### Image galleries
 

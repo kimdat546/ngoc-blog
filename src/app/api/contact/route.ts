@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendNotification } from "@/lib/comments";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -56,24 +56,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid message" }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.CONTACT_EMAIL_TO;
-  if (!apiKey || !to) {
-    console.error("Contact form is not configured (missing env vars)");
-    return NextResponse.json(
-      { error: "Server is not configured" },
-      { status: 500 }
-    );
-  }
-
-  const resend = new Resend(apiKey);
-
   try {
-    const { error } = await resend.emails.send({
-      from: "My Forest Blog <onboarding@resend.dev>",
-      to: [to],
-      replyTo: trimmed.email,
+    await sendNotification({
       subject: `[Forest Blog] ${trimmed.subject}`,
+      replyTo: trimmed.email,
       html: `
         <h2>New message from ${escapeHtml(trimmed.name)}</h2>
         <p><strong>Email:</strong> ${escapeHtml(trimmed.email)}</p>
@@ -81,22 +67,14 @@ export async function POST(request: Request) {
         <hr />
         <p style="white-space: pre-wrap">${escapeHtml(trimmed.message)}</p>
       `,
+      text: `${trimmed.name} <${trimmed.email}>\n${trimmed.subject}\n\n${trimmed.message}`,
     });
-
-    if (error) {
-      console.error("Resend error:", error);
-      return NextResponse.json(
-        { error: "Failed to send message" },
-        { status: 502 }
-      );
-    }
-
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("Unexpected error sending contact email:", err);
+    console.error("Failed to send contact email:", err);
     return NextResponse.json(
       { error: "Failed to send message" },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }

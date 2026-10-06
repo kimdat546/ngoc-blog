@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import {
   CommentsApiError,
   createComment,
   hashIp,
   listComments,
+  sendNotification,
 } from "@/lib/comments";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -114,45 +114,39 @@ export async function POST(request: Request) {
   }
 
   // Notify the author (best-effort, do not block the response on failure)
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.CONTACT_EMAIL_TO;
-  if (apiKey && to) {
-    try {
-      const resend = new Resend(apiKey);
-      const isAnon = !trimmedName && !trimmedEmail;
-      const title = typeof postTitle === "string" && postTitle ? postTitle : postSlug;
-      const subject = isAnon
-        ? `[Forest Blog] Bình luận ẩn danh mới trên "${title}"`
-        : `[Forest Blog] ${trimmedName || trimmedEmail} bình luận trên "${title}"`;
+  try {
+    const isAnon = !trimmedName && !trimmedEmail;
+    const title = typeof postTitle === "string" && postTitle ? postTitle : postSlug;
+    const subject = isAnon
+      ? `[Forest Blog] Bình luận ẩn danh mới trên "${title}"`
+      : `[Forest Blog] ${trimmedName || trimmedEmail} bình luận trên "${title}"`;
 
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || "https://ngocmyforestblog.vercel.app";
-      const postUrl = `${siteUrl}/post/${postSlug}`;
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://ngocmyforestblog.vercel.app";
+    const postUrl = `${siteUrl}/post/${postSlug}`;
 
-      const lines: string[] = [];
-      lines.push(
-        `<p><strong>Bài viết:</strong> <a href="${escapeHtml(postUrl)}">${escapeHtml(title)}</a></p>`
-      );
-      if (isAnon) {
-        lines.push(`<p><strong>Người gửi:</strong> Ẩn danh</p>`);
-      } else {
-        if (trimmedName) lines.push(`<p><strong>Tên:</strong> ${escapeHtml(trimmedName)}</p>`);
-        if (trimmedEmail)
-          lines.push(`<p><strong>Email:</strong> ${escapeHtml(trimmedEmail)}</p>`);
-      }
-      lines.push(`<hr />`);
-      lines.push(`<p style="white-space: pre-wrap">${escapeHtml(trimmedContent)}</p>`);
-
-      await resend.emails.send({
-        from: "My Forest Blog <onboarding@resend.dev>",
-        to: [to],
-        replyTo: trimmedEmail || undefined,
-        subject,
-        html: lines.join("\n"),
-      });
-    } catch (err) {
-      console.error("Failed to send comment notification:", err);
+    const lines: string[] = [];
+    lines.push(
+      `<p><strong>Bài viết:</strong> <a href="${escapeHtml(postUrl)}">${escapeHtml(title)}</a></p>`
+    );
+    if (isAnon) {
+      lines.push(`<p><strong>Người gửi:</strong> Ẩn danh</p>`);
+    } else {
+      if (trimmedName) lines.push(`<p><strong>Tên:</strong> ${escapeHtml(trimmedName)}</p>`);
+      if (trimmedEmail)
+        lines.push(`<p><strong>Email:</strong> ${escapeHtml(trimmedEmail)}</p>`);
     }
+    lines.push(`<hr />`);
+    lines.push(`<p style="white-space: pre-wrap">${escapeHtml(trimmedContent)}</p>`);
+
+    await sendNotification({
+      subject,
+      html: lines.join("\n"),
+      text: `${title}\n${postUrl}\n\n${trimmedContent}`,
+      replyTo: trimmedEmail,
+    });
+  } catch (err) {
+    console.error("Failed to send comment notification:", err);
   }
 
   return NextResponse.json({ comment: inserted });

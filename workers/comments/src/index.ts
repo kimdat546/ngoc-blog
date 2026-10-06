@@ -1,11 +1,13 @@
-// Comments API for the blog. Only the Next.js server calls this Worker
-// (authenticated with API_SECRET); browsers never talk to it directly.
+// Backend for the blog: comments (D1) and owner notification emails. Only the
+// Next.js server calls this Worker (authenticated with API_SECRET); browsers
+// never talk to it directly.
 
 // Secrets aren't in wrangler.jsonc, so `wrangler types` doesn't know about them.
 declare global {
   interface Env {
     API_SECRET?: string;
     TURNSTILE_SECRET?: string;
+    NOTIFY_TO?: string;
   }
 }
 
@@ -20,7 +22,15 @@ interface CommentInput {
   remote_ip?: string | null;
 }
 
+interface NotifyInput {
+  subject: string;
+  html: string;
+  text?: string;
+  reply_to?: string | null;
+}
+
 const COLUMNS = "id, name, email, content, created_at";
+const NOTIFY_FROM = { name: "My Forest Blog", email: "blog@hypercoding.dev" };
 
 function json(data: unknown, status = 200) {
   return Response.json(data, { status });
@@ -98,6 +108,24 @@ async function createComment(env: Env, input: CommentInput) {
   return json({ comment }, 201);
 }
 
+// Emails the blog owner (contact form, new comments). The recipient is fixed
+// to NOTIFY_TO, a verified Email Routing destination, so callers can't pick it.
+async function notify(env: Env, input: NotifyInput) {
+  if (!env.NOTIFY_TO) return json({ error: "not_configured" }, 500);
+  if (typeof input.subject !== "string" || !input.subject || typeof input.html !== "string" || !input.html) {
+    return json({ error: "Missing subject or html" }, 400);
+  }
+  const { messageId } = await env.EMAIL.send({
+    from: NOTIFY_FROM,
+    to: env.NOTIFY_TO,
+    subject: input.subject.slice(0, 250),
+    html: input.html,
+    text: input.text,
+    replyTo: input.reply_to || undefined,
+  });
+  return json({ ok: true, messageId });
+}
+
 export default {
   async fetch(request, env): Promise<Response> {
     if (!isAuthorized(request, env.API_SECRET)) {
@@ -105,6 +133,17 @@ export default {
     }
 
     const url = new URL(request.url);
+
+    if (url.pathname === "/notify") {
+      if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+      try {
+        return await notify(env, await request.json<NotifyInput>());
+      } catch (err) {
+        console.error("Notify error:", err);
+        return json({ error: "send_failed" }, 502);
+      }
+    }
+
     if (url.pathname !== "/comments") {
       return json({ error: "Not found" }, 404);
     }

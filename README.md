@@ -42,7 +42,7 @@ This blog is a creative space for a passionate nature writer and storyteller who
 | **Contentful** | Headless CMS for blog content |
 | **Cloudflare Workers + D1** | Comments API and storage |
 | **Cloudflare Turnstile** | Spam protection for comments |
-| **Resend** | Contact form and comment notification emails |
+| **Cloudflare Email Routing** | Contact form and comment notification emails |
 | **Turbopack** | Fast development builds |
 | **React Icons** | Icon library |
 | **Lucide Icons** | Additional icon set (via CDN) |
@@ -105,7 +105,7 @@ ngoc-blog/
 
 3. **Set up environment variables**
 
-   Copy the example environment file and fill in the values (Contentful, Resend, comments Worker, Turnstile):
+   Copy the example environment file and fill in the values (Contentful, comments Worker, Turnstile):
    ```bash
    cp .env.example .env.local
    ```
@@ -135,6 +135,7 @@ Comments are stored in Cloudflare D1 behind a small Worker in `workers/comments/
 npx wrangler d1 migrations apply ngoc-blog-comments --remote
 npx wrangler secret put API_SECRET        # same value as COMMENTS_API_SECRET
 npx wrangler secret put TURNSTILE_SECRET  # Turnstile widget secret key
+npx wrangler secret put NOTIFY_TO         # verified Email Routing destination for notifications
 npx wrangler deploy
 ```
 

@@ -1,5 +1,5 @@
-// Server-only client for the comments Worker (workers/comments).
-// The API secret must never reach the browser.
+// Server-only client for the blog Worker (workers/comments): comments and
+// notification emails to the blog owner. The API secret must never reach the browser.
 
 const apiUrl = process.env.COMMENTS_API_URL;
 const apiSecret = process.env.COMMENTS_API_SECRET;
@@ -67,4 +67,19 @@ export async function hashIp(ip: string): Promise<string> {
   const bytes = new TextEncoder().encode(`${ip}:${apiSecret ?? ""}`);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export interface Notification {
+  subject: string;
+  html: string;
+  text?: string;
+  replyTo?: string | null;
+}
+
+// Emails the blog owner via Cloudflare Email Routing (recipient is set on the Worker).
+export async function sendNotification({ subject, html, text, replyTo }: Notification) {
+  await callWorker<{ ok: true }>("/notify", {
+    method: "POST",
+    body: JSON.stringify({ subject, html, text, reply_to: replyTo ?? null }),
+  });
 }

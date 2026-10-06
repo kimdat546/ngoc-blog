@@ -3,6 +3,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "observability": { "enabled": true },
+  // Notification emails to the blog owner (Email Routing on hypercoding.dev;
+  // the recipient must be a verified destination address in the account).
+  "send_email": [{ "name": "EMAIL" }],
   "d1_databases": [
     {
       "binding": "DB",
@@ -14,4 +17,5 @@
   // Secrets (set with `npx wrangler secret put <NAME>`):
   //   API_SECRET        shared with the Next app (COMMENTS_API_SECRET)
   //   TURNSTILE_SECRET  secret key of the "ngoc-blog-comments" Turnstile widget
+  //   NOTIFY_TO         verified Email Routing destination that receives notifications
 }
