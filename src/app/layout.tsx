@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ngocmyforestblog.vercel.app";
+import Header from "@/components/Header";
+import { getMenuCategories } from "@/lib/categoryData";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "My Personal Forest Blog - Stories, Articles & Adventures",
+  title: {
+    default: "My Personal Forest Blog - Stories, Articles & Adventures",
+    template: "%s | My Forest Blog",
+  },
   description: "Personal blog sharing my stories, articles, and adventures inspired by nature and magical experiences",
   keywords: "personal blog, stories, articles, nature writing, forest tales, adventures",
   openGraph: {
+    siteName: "My Forest Blog",
+    locale: "vi_VN",
+    type: "website",
     title: "My Personal Forest Blog - Stories, Articles & Adventures",
     description: "Personal blog sharing my stories, articles, and adventures inspired by nature and magical experiences",
   },
@@ -18,13 +25,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -32,6 +39,7 @@ export default function RootLayout({
         <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet" />
       </head>
       <body className="antialiased">
+        <Header menuCategories={await getMenuCategories()} />
         {children}
       </body>
     </html>

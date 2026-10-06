@@ -3,6 +3,8 @@ import ImageGallery from "@/components/gallery/ImageGallery";
 import { assetToGalleryImage, type GalleryImage } from "@/lib/gallery";
 import client from "@/lib/contentful";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function DevGallery() {
   const res = await client.getEntries({ content_type: "blogPost", limit: 100, include: 2 } as any);
   const images = res.items

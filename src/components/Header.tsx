@@ -5,18 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { FiChevronDown } from 'react-icons/fi';
-import { getMenuCategories, type MenuCategory } from '@/lib/categoryData';
+import type { MenuCategory } from '@/lib/categoryData';
 
-export default function Header() {
+// Menu categories are fetched on the server (root layout) so they're in the HTML.
+export default function Header({ menuCategories }: { menuCategories: MenuCategory[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    getMenuCategories().then(setMenuCategories);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {

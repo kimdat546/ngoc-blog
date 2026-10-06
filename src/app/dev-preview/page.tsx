@@ -43,6 +43,8 @@ const demo = doc(
   entry("styledText", { font: "serif", color: "rose", align: "center", size: "normal", body: body("Font mặc định của blog, màu hồng nhẹ") }),
 ) as Document;
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default function DevPreview() {
   return (
     <main className="container mx-auto px-6 py-12 max-w-4xl bg-warm-white">

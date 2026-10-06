@@ -28,7 +28,8 @@ Copy `.env.example` → `.env.local`. Variables (also needed in Vercel):
 - `NEXT_PUBLIC_CONTENTFUL_SPACE_ID`, `NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN` — read in `src/lib/contentful.ts`. Without them, all data fetches return empty arrays (errors are caught and logged, not thrown).
 - `COMMENTS_API_URL`, `COMMENTS_API_SECRET` — server-only; where the blog Worker lives and the shared bearer secret (must equal the Worker's `API_SECRET`). Used for both comments and notification emails.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — Cloudflare Turnstile widget on the comment form. If unset, the widget isn't rendered and comments can't be submitted.
-- `NEXT_PUBLIC_SITE_URL` (optional) — defaults to the Vercel URL; used for `metadataBase` and links in emails.
+- `REVALIDATE_SECRET` — shared with the Contentful webhook that calls `/api/revalidate` (header `x-revalidate-secret`).
+- `NEXT_PUBLIC_SITE_URL` (optional) — defaults to the Vercel URL (`src/lib/site.ts`); used for `metadataBase`, sitemap/robots, JSON-LD and links in emails.
 
 ## Architecture
 
@@ -41,18 +42,27 @@ All blog data flows through `src/lib/blogData.ts`, which wraps the Contentful De
 - Featured image URLs come back protocol-relative from Contentful; the transform prepends `https:`.
 - `featured` is currently hardcoded to `false` — there is no "featured" field in the CMS yet. `getFeaturedPosts()` just returns the 3 most recent posts.
 - All fetch helpers swallow errors and return `[]`/`null` rather than throwing. Callers don't need try/catch but also won't distinguish "no posts" from "Contentful is down."
-- Categories (`src/lib/categoryData.ts`) are parent/child. `getMenuCategories()` returns top-level categories with `showInMenu`, sorted by `menuOrder`; `Header` loads them client-side.
+- `getBlogPosts`, `getPostBySlug`, `getPostById`, `getCategories` are wrapped in React `cache()` so repeated calls in one render (layout + page + `generateMetadata`) hit Contentful once. `getRelatedPosts(post)` queries only same-category posts.
+- Client components get `PostSummary` objects (`toPostSummary`), not full `BlogPost`s, to keep rich-text documents out of the client payload. `/posts` passes a lowercased `searchText` (title + excerpt + content) for search.
+- Categories (`src/lib/categoryData.ts`) are parent/child. `getMenuCategories()` returns top-level categories with `showInMenu`, sorted by `menuOrder`, each with its `children`.
 
 When rendering post bodies, prefer the `*RichText` fields with `@contentful/rich-text-react-renderer`, not the plain-text strings. The post page's renderer handles embedded Contentful video (`ScrollAutoplayVideo`) / audio and turns bare YouTube links (link text == URL) into `YouTubeEmbed`.
 
-### Routing
+### Routing, rendering & caching
 
-- `/` — composed in `src/app/page.tsx` from `Header`, `Hero`, `About`, `BlogPosts`, `Contact`, `Footer`. `BlogPosts` and `/posts` fetch Contentful client-side.
-- `/posts` — full post listing with search (title, excerpt, content).
-- `/post/[slug]` — post detail, looked up with `getPostBySlug`. Legacy `/post/<contentful sys.id>` URLs (22-char base62) are 308-redirected to the slug URL. Has `generateMetadata` for SEO/OG and appends `PostDisclaimer` + `CommentSection`.
-- `/category/[slug]` — posts in the category and all its child categories.
+All data is fetched on the server so content is in the HTML (SEO). Contentful uses axios, not `fetch`, so caching is done with route-level ISR: pages export `revalidate = 600` (10 min) and `/post/[slug]` + `/category/[slug]` prebuild every slug via `generateStaticParams` (new slugs render on first visit). Don't read `searchParams`/headers in these pages or they become dynamic.
+
+- `layout.tsx` — renders `Header` with `getMenuCategories()` for every page (pages don't render `Header` themselves; they still render `Footer`). `lang="vi"`, title template `%s | My Forest Blog`.
+- `/` — `src/app/page.tsx` fetches posts + categories and passes them to `BlogPosts` (client, category filter).
+- `/posts` — server page with metadata; `PostsBrowser` (client) does filtering/search. `?category=<slug>` is read on the client (keeps the page static) and kept in sync with `history.replaceState`.
+- `/post/[slug]` — looked up with `getPostBySlug`. Legacy `/post/<contentful sys.id>` URLs (22-char base62) are 308-redirected to the slug URL. `generateMetadata` for SEO/OG, `BlogPosting` JSON-LD, then `PostDisclaimer` + `CommentSection` + related posts.
+- `/category/[slug]` — posts in the category and all its child categories; child categories link back to the parent.
+- `/sitemap.xml`, `/robots.txt` — `src/app/sitemap.ts` / `robots.ts`. Robots disallows `/api/` and the example pages `/dev-gallery`, `/dev-preview` (also `noindex`).
+- `/api/revalidate` — POST from a Contentful webhook (header `x-revalidate-secret`) → `revalidatePath("/", "layout")` so publishes show up immediately.
 - `/api/contact` — POST, emails the contact form to the owner via the Worker's `/notify` (honeypot field `website`).
-- `/api/comments` — GET list / POST create; proxies to the comments Worker.
+- `/api/comments` — GET list / POST create; proxies to the comments Worker. Comments are loaded client-side, so they're unaffected by ISR.
+
+Images on cards/hero go through `contentfulImageUrl()` (Contentful Images API: resized + webp).
 
 ### Comments (Cloudflare Worker + D1 + Turnstile)
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SITE_URL } from "@/lib/site";
 import {
   CommentsApiError,
   createComment,
@@ -120,10 +121,7 @@ export async function POST(request: Request) {
     const subject = isAnon
       ? `[Forest Blog] Bình luận ẩn danh mới trên "${title}"`
       : `[Forest Blog] ${trimmedName || trimmedEmail} bình luận trên "${title}"`;
-
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://ngocmyforestblog.vercel.app";
-    const postUrl = `${siteUrl}/post/${postSlug}`;
+    const postUrl = `${SITE_URL}/post/${postSlug}`;
 
     const lines: string[] = [];
     lines.push(

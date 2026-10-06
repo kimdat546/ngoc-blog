@@ -28,7 +28,7 @@ function autoLayout(imageCount: number): GalleryLayout {
 // Resized/optimised URL from the Contentful Images API. GIFs are left alone so
 // they keep animating.
 export function contentfulImageUrl(src: string, width: number) {
-  if (/\.gif($|\?)/i.test(src)) return src;
+  if (!src || /\.gif($|\?)/i.test(src)) return src;
   return `${src}?w=${width}&fm=webp&q=80`;
 }
 

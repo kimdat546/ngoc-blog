@@ -1,43 +1,24 @@
 "use client";
 
-import { BlogPost, getBlogPosts } from "@/lib/blogData";
-import { Category, getCategories } from "@/lib/categoryData";
+import type { PostSummary } from "@/lib/blogData";
+import type { Category } from "@/lib/categoryData";
+import { contentfulImageUrl } from "@/lib/gallery";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { BsCalendar2Heart } from "react-icons/bs";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { TbClockHeart } from "react-icons/tb";
 
-export default function BlogPosts() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+// Homepage "latest posts" section. Data comes from the server (src/app/page.tsx)
+// so the posts are in the HTML; the category buttons filter on the client.
+export default function BlogPosts({ posts, categories }: { posts: PostSummary[]; categories: Category[] }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const allPosts = await getBlogPosts();
-      setPosts(allPosts);
-      setFilteredPosts(allPosts.slice(0, 3)); // Show only first 3 posts on homepage
-
-      const fetchedCategories = await getCategories();
-      setCategories(fetchedCategories);
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    let filtered = posts;
-
-    if (selectedCategory !== "All") {
-      filtered = filtered.filter((post) => post.category === selectedCategory);
-    }
-
-    setFilteredPosts(filtered.slice(0, 3)); // Always show max 3 posts on homepage
-  }, [posts, selectedCategory]);
+  const filteredPosts = useMemo(
+    () =>
+      (selectedCategory === "All" ? posts : posts.filter((post) => post.category === selectedCategory)).slice(0, 3),
+    [posts, selectedCategory]
+  );
 
   return (
     <section id="blog" className="py-12 sm:py-16 md:py-20 bg-cream">
@@ -81,23 +62,7 @@ export default function BlogPosts() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
-          {loading
-            ? // Loading skeletons
-              [1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="floating-card overflow-hidden animate-pulse"
-                >
-                  <div className="aspect-video bg-sage/20"></div>
-                  <div className="p-4 sm:p-6">
-                    <div className="h-4 bg-sage/20 rounded mb-3"></div>
-                    <div className="h-6 bg-sage/20 rounded mb-3"></div>
-                    <div className="h-4 bg-sage/20 rounded mb-2"></div>
-                    <div className="h-4 bg-sage/20 rounded w-3/4"></div>
-                  </div>
-                </div>
-              ))
-            : filteredPosts.map((post, index) => (
+          {filteredPosts.map((post, index) => (
                 <article
                   key={post.id}
                   className="floating-card overflow-hidden"
@@ -106,8 +71,9 @@ export default function BlogPosts() {
                   <Link href={`/post/${post.slug}`} className="block">
                     <div className="aspect-video bg-sage/20 relative overflow-hidden">
                       <img
-                        src={post.image}
+                        src={contentfulImageUrl(post.image, 800)}
                         alt={post.title}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                       />
                       <div className="absolute top-4 left-4">

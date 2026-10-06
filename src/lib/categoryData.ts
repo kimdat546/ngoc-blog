@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import client from './contentful';
 
 export interface Category {
@@ -26,7 +27,7 @@ function transformContentfulCategory(entry: any): Category {
   };
 }
 
-export const getCategories = async (): Promise<Category[]> => {
+export const getCategories = cache(async (): Promise<Category[]> => {
   try {
     const response = await client.getEntries({
       content_type: 'category',
@@ -36,7 +37,7 @@ export const getCategories = async (): Promise<Category[]> => {
     console.error('Error fetching categories from Contentful:', error);
     return [];
   }
-};
+});
 
 export const getCategoryById = async (id: string): Promise<Category | null> => {
   try {

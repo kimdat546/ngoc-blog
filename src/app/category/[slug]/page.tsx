@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
-  getCategoryById,
+  getCategories,
   getCategoryBySlug,
   getChildCategories,
 } from "@/lib/categoryData";
+import { contentfulImageUrl } from "@/lib/gallery";
 import { getPostsByCategoryIds } from "@/lib/blogData";
 import { BsCalendar2Heart } from "react-icons/bs";
 import { TbClockHeart } from "react-icons/tb";
+
+// Prebuilt at deploy, refreshed at most every 10 minutes (and via /api/revalidate).
+export const revalidate = 600;
+
+export async function generateStaticParams() {
+  const categories = await getCategories();
+  return categories.filter((c) => c.slug).map((c) => ({ slug: c.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -20,7 +28,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const category = await getCategoryBySlug(slug);
   if (!category) return {};
-  const title = `${category.name} - My Forest Blog`;
+  const title = category.name;
   const description = category.description || `Bài viết về ${category.name}`;
   return {
     title,
@@ -39,16 +47,17 @@ export default async function CategoryPage({
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const [children, parent] = await Promise.all([
+  const [children, allCategories] = await Promise.all([
     getChildCategories(category.id),
-    category.parentId ? getCategoryById(category.parentId) : null,
+    getCategories(),
   ]);
+  // Parent may be unpublished/deleted; then the back link falls back to /posts.
+  const parent = allCategories.find((c) => c.id === category.parentId) ?? null;
   const allIds = [category.id, ...children.map((c) => c.id)];
   const posts = await getPostsByCategoryIds(allIds);
 
   return (
     <div className="min-h-screen bg-warm-white">
-      <Header />
 
       <section className="container mx-auto px-6 py-12 max-w-6xl pt-24">
         <div className="text-center mb-12">
@@ -98,8 +107,9 @@ export default async function CategoryPage({
                 <Link href={`/post/${post.slug}`} className="block">
                   <div className="aspect-video bg-sage/20 relative overflow-hidden">
                     <img
-                      src={post.image}
+                      src={contentfulImageUrl(post.image, 800)}
                       alt={post.title}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-1 right-1">

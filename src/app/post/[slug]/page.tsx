@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PostDisclaimer from "@/components/PostDisclaimer";
 import YouTubeEmbed from "@/components/YouTubeEmbed";
@@ -13,7 +13,9 @@ import {
   getBlogPosts,
   getPostById,
   getPostBySlug,
+  getRelatedPosts,
 } from "@/lib/blogData";
+import { contentfulImageUrl } from "@/lib/gallery";
 import { BsCalendar2Heart } from "react-icons/bs";
 import { TbClockHeart } from "react-icons/tb";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
@@ -22,6 +24,15 @@ import type { ReactNode } from "react";
 
 // Contentful sys.id: 22-char base62 (alphanumeric, no hyphens). Slugs are kebab-case with hyphens.
 const CONTENTFUL_ID_RE = /^[A-Za-z0-9]{22}$/;
+
+// Pages are prebuilt at deploy and refreshed in the background at most every
+// 10 minutes (and on demand via /api/revalidate). New slugs render on first visit.
+export const revalidate = 600;
+
+export async function generateStaticParams() {
+  const posts = await getBlogPosts();
+  return posts.filter((p) => p.slug).map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -82,14 +93,28 @@ export default async function PostPage({
     notFound();
   }
 
-  const allPosts = await getBlogPosts();
-  const relatedPosts = allPosts
-    .filter((p) => p.id !== post.id && p.category === post.category)
-    .slice(0, 3);
+  const relatedPosts = await getRelatedPosts(post);
+  // Structured data so search engines understand this is a blog post.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt.slice(0, 200),
+    image: post.image ? [post.image] : undefined,
+    datePublished: post.date,
+    dateModified: post.updatedAt,
+    articleSection: post.category || undefined,
+    inLanguage: "vi",
+    mainEntityOfPage: `${SITE_URL}/post/${post.slug}`,
+    publisher: { "@type": "Organization", name: "My Forest Blog" },
+  };
 
   return (
     <div className="min-h-screen bg-warm-white">
-      <Header />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
 
       <article className="container mx-auto px-6 py-12 max-w-4xl pt-24">
         <div className="mb-8">
@@ -135,7 +160,7 @@ export default async function PostPage({
 
         <div className="aspect-video bg-sage/20 rounded-2xl overflow-hidden mb-8">
           <img
-            src={post.image}
+            src={contentfulImageUrl(post.image, 1600)}
             alt={post.title}
             className="w-full h-full object-cover"
           />
@@ -214,8 +239,9 @@ export default async function PostPage({
                 >
                   <div className="aspect-video bg-sage/20 relative overflow-hidden">
                     <img
-                      src={relatedPost.image}
+                      src={contentfulImageUrl(relatedPost.image, 800)}
                       alt={relatedPost.title}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-1 right-1">

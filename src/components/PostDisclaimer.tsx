@@ -9,29 +9,29 @@ export default function PostDisclaimer() {
       aria-label="Lưu ý của tác giả"
       className="not-prose mt-20 mb-6 mx-auto max-w-xl text-center"
     >
-      <div className="flex items-center justify-center gap-3 text-sage/70" aria-hidden="true">
-        <span className="h-px w-16 bg-gradient-to-r from-transparent to-sage/40" />
+      <div className="flex items-center justify-center gap-3 text-moss" aria-hidden="true">
+        <span className="h-px w-16 bg-gradient-to-r from-transparent to-moss/30" />
         <PiLeafDuotone className="text-base" />
-        <span className="h-px w-16 bg-gradient-to-l from-transparent to-sage/40" />
+        <span className="h-px w-16 bg-gradient-to-l from-transparent to-moss/30" />
       </div>
 
       <details className="group mt-4">
         <summary className="list-none cursor-pointer [&::-webkit-details-marker]:hidden">
-          <span className="block text-[0.7rem] uppercase tracking-[0.2em] text-sage">
+          <span className="block text-[0.7rem] uppercase tracking-[0.2em] font-semibold text-forest">
             Đôi lời ngỏ
           </span>
-          <span className="mt-2 block text-sm italic leading-relaxed text-forest/55">
+          <span className="mt-2 block text-sm italic leading-relaxed text-forest/80">
             Những gì mình chia sẻ là góc nhìn và trải nghiệm cá nhân, không
             thay thế lời khuyên y tế hay tư vấn tâm lý chuyên nghiệp.
           </span>
-          <span className="mt-3 inline-flex items-center gap-1 text-xs text-moss/70 hover:text-moss transition-colors">
+          <span className="mt-3 inline-flex items-center gap-1 text-xs text-moss hover:text-forest transition-colors">
             <span className="group-open:hidden">Đọc thêm</span>
             <span className="hidden group-open:inline">Thu gọn</span>
             <FiChevronDown className="transition-transform duration-300 group-open:rotate-180" />
           </span>
         </summary>
 
-        <div className="mt-5 rounded-2xl bg-cream/60 px-5 py-6 sm:px-8 text-left text-sm leading-relaxed text-forest/65 space-y-4">
+        <div className="mt-5 rounded-2xl bg-cream/60 px-5 py-6 sm:px-8 text-left text-sm leading-relaxed text-forest/80 space-y-4">
           <p>
             Chào bạn, cảm ơn bạn đã ghé thăm góc nhỏ của mình — nơi mình lưu giữ
             những câu chuyện, trải nghiệm và những chiêm nghiệm trên hành trình
@@ -40,7 +40,7 @@ export default function PostDisclaimer() {
           </p>
 
           <div>
-            <p className="font-semibold text-moss/90">Về những câu chuyện</p>
+            <p className="font-semibold text-moss">Về những câu chuyện</p>
             <p>
               Tất cả nội dung tại đây (dù là bài viết, âm thanh hay hình ảnh)
               đều là những góc nhìn cá nhân, những nghiên cứu và trải nghiệm
@@ -51,7 +51,7 @@ export default function PostDisclaimer() {
           </div>
 
           <div>
-            <p className="font-semibold text-moss/90">Về sức khỏe và sự an yên của bạn</p>
+            <p className="font-semibold text-moss">Về sức khỏe và sự an yên của bạn</p>
             <p>
               Những gì mình chia sẻ không nhằm mục đích chẩn đoán, điều trị hay
               thay thế bất kỳ phác đồ y khoa nào. Mỗi người là một cá thể duy
@@ -62,7 +62,7 @@ export default function PostDisclaimer() {
           </div>
 
           <div>
-            <p className="font-semibold text-moss/90">Về các phương pháp năng lượng</p>
+            <p className="font-semibold text-moss">Về các phương pháp năng lượng</p>
             <p>
               Những trải nghiệm về năng lượng hay tinh thần mà mình nhắc đến
               mang tính cá nhân và có thể mang lại kết quả khác nhau tùy mỗi
@@ -72,7 +72,7 @@ export default function PostDisclaimer() {
             </p>
           </div>
 
-          <p className="pt-4 border-t border-sage/20 italic text-center">
+          <p className="pt-4 border-t border-moss/15 italic text-center text-forest/70">
             Mình luôn khuyến khích bạn kết hợp việc tìm hiểu cá nhân với sự hỗ
             trợ từ các đơn vị y tế chuyên nghiệp để có một hành trình chữa lành
             bền vững nhất nhé. 🌿
